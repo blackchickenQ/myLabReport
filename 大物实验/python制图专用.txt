@@ -1,0 +1,42 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# ===================== 固定配置（不用改）=====================
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
+
+# ===================== 填入你的两组实验数据 =====================
+# 第一组数据
+x1 = [1,2,3,4,5]
+y1 = [1.2,2.3,3.1,4.2,5.0]
+# 第二组数据
+x2 = [1,2,3,4,5]
+y2 = [0.8,1.5,2.4,3.3,4.1]
+
+# ===================== 线性拟合求斜率、截距 =====================
+k1, b1 = np.polyfit(x1, y1, 1)
+k2, b2 = np.polyfit(x2, y2, 1)
+
+print(f"第一组拟合：斜率k1 = {k1:.4f}，截距b1 = {b1:.4f}")
+print(f"第二组拟合：斜率k2 = {k2:.4f}，截距b2 = {b2:.4f}")
+
+# 生成拟合线横坐标范围
+x1_line = np.linspace(min(x1), max(x1), 200)
+y1_line = k1 * x1_line + b1
+
+x2_line = np.linspace(min(x2), max(x2), 200)
+y2_line = k2 * x2_line + b2
+
+# ===================== 绘图：仅绘制拟合线，不画散点 =====================
+plt.plot(x1_line, y1_line, linestyle='--', color='red', linewidth=2, label=f'拟合线1 k={k1:.3f}')
+plt.plot(x2_line, y2_line, linestyle='--', color='green', linewidth=2, label=f'拟合线2 k={k2:.3f}')
+
+# 坐标轴标题
+plt.xlabel('Ek / eV', fontsize=12)
+plt.ylabel('Ip / μA', fontsize=12)
+plt.title('两组Ip-Ek拟合曲线', fontsize=14)
+
+plt.legend(fontsize=11)
+plt.grid(True, linestyle=':')
+plt.tight_layout()
+plt.show()
