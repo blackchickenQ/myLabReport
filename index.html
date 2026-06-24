@@ -1,98 +1,142 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Draco | 深圳大学 实验报告收纳</title>
     <style>
+        /* ===== 全局重置 & 基础 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft Yahei", sans-serif;
+            font-family: "Microsoft Yahei", "PingFang SC", sans-serif;
         }
+
         body {
-            background: linear-gradient(135deg, #050a20, #0e1b3d, #11224a);
-            background-size: 300% 300%;
-            animation: bgMove 32s linear infinite;
+            background: #050a20;
             min-height: 100vh;
             overflow-x: hidden;
             color: #fff;
             position: relative;
         }
-        @keyframes bgMove {
-            0% {background-position: 0% 50%;}
-            100% {background-position: 100% 50%;}
+
+        /* ===== 动态星空粒子画布 ===== */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
+
+        /* ===== 主容器 ===== */
         .container {
+            position: relative;
+            z-index: 1;
             max-width: 1100px;
             margin: 0 auto;
             padding: 30px 20px;
         }
+
+        /* ===== 头部 ===== */
         .header {
             display: flex;
             justify-content: flex-end;
             margin: 60px 0 80px;
-            animation: headerShow 1.8s ease forwards;
             opacity: 0;
-            transform: translateY(-30px);
+            transform: translateY(-40px) scale(0.96);
+            animation: headerEnter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
         }
-        @keyframes headerShow {
-            to {opacity: 1; transform: translateY(0);}
+        @keyframes headerEnter {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
+
         .name-box {
             text-align: right;
             opacity: 0;
-            transform: translateY(40px);
-            animation: nameFadeUp 1.2s ease-out 0.6s forwards;
+            transform: translateY(30px) scale(0.92);
+            animation: nameEnter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
         }
-        @keyframes nameFadeUp {
-            to {opacity: 1; transform: translateY(0);}
+        @keyframes nameEnter {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
+
         .main-name {
-            font-size: 48px;
-            margin-bottom: 12px;
-            color: #ffffff;
-            text-shadow: 0 0 20px rgba(99, 179, 255, 0.3);
+            font-size: 52px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f0f8ff, #63b3ff, #a0d0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 0 30px rgba(99, 179, 255, 0.25));
+            transition: filter 0.5s ease;
         }
+        .main-name:hover {
+            filter: drop-shadow(0 0 50px rgba(99, 179, 255, 0.45));
+        }
+
         .subTitle {
             font-size: 18px;
             color: #b8d4ff;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            opacity: 0.8;
         }
+
+        /* ===== 卡片 ===== */
         .card {
             position: relative;
             overflow: hidden;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(7px);
-            will-change: transform, opacity;
-            border: 1px solid rgba(120, 180, 255, 0.12);
-            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(120, 180, 255, 0.10);
+            border-radius: 24px;
             padding: 32px;
             margin: 36px 0;
             opacity: 0;
-            transform: scale(0.88);
-            transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(50px) scale(0.94);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform, opacity, box-shadow;
+            cursor: default;
         }
         .card.active {
             opacity: 1;
-            transform: scale(1);
+            transform: translateY(0) scale(1);
         }
+
         .card::before {
             content: "";
             position: absolute;
             top: 0;
-            left: -120%;
-            width: 120%;
+            left: -150%;
+            width: 150%;
             height: 100%;
-            background: linear-gradient(90deg,transparent,rgba(255, 255, 255, 0.05),transparent);
-            transform: skewX(-12deg);
-            transition: left 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+            transform: skewX(-15deg);
+            transition: left 1.2s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 0;
+            pointer-events: none;
         }
         .card.active::before {
-            left: 120%;
+            left: 150%;
         }
+
+        .card:hover {
+            border-color: rgba(120, 180, 255, 0.30);
+            box-shadow: 0 20px 60px rgba(54, 136, 255, 0.12), inset 0 0 80px rgba(99, 179, 255, 0.02);
+        }
+
         .card h2,
         .card p,
         .card .labList,
@@ -101,93 +145,168 @@
             position: relative;
             z-index: 1;
         }
-        .card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 16px 40px rgba(54, 136, 255, 0.16);
-            border-color: rgba(120, 180, 255, 0.38);
-        }
-        .card:active {
-            transform: scale(0.99);
-            box-shadow: 0 10px 25px rgba(54, 136, 255, 0.12);
-        }
+
         .card h2 {
             color: #63b3ff;
             margin-bottom: 18px;
             font-size: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: 1px;
         }
+        .card h2::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(99, 179, 255, 0.3), transparent);
+            margin-left: 10px;
+        }
+
         .card p {
-            line-height: 1.8;
+            line-height: 1.9;
             color: #d0e1ff;
             font-size: 16px;
         }
+
         .empty-tip {
             color: #88a8d8;
             font-size: 14px;
-            margin-top: 12px;
+            margin-top: 14px;
             display: flex;
             align-items: center;
-            gap: 8;
+            gap: 8px;
+            opacity: 0.7;
         }
+        .empty-tip::before {
+            content: '✨';
+            font-size: 16px;
+        }
+
+        /* ===== 标签 ===== */
         .labList {
             display: flex;
             flex-wrap: wrap;
             gap: 14px;
             margin-top: 22px;
         }
+
         .labTag {
-            padding: 10px 20px;
-            background: rgba(54,136,255,0.16);
+            padding: 10px 24px;
+            background: rgba(54, 136, 255, 0.12);
             border-radius: 50px;
-            border: 1px solid rgba(99, 179, 255, 0.28);
-            transition: all 0.25s ease;
+            border: 1px solid rgba(99, 179, 255, 0.20);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             cursor: pointer;
-            will-change: transform;
             position: relative;
             overflow: hidden;
+            user-select: none;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            will-change: transform;
+            transform: translateY(0);
         }
         .labTag::after {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-        }
-        .labTag:active::after {
-            width: 200px;
-            height: 200px;
+            inset: 0;
+            border-radius: 50px;
+            background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.15), transparent 70%);
             opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+        .labTag:hover::after {
+            opacity: 1;
         }
         .labTag:hover {
-            background: #3688ff;
-            transform: translateY(-5px) scale(1.08);
-            box-shadow: 0 6px 16px #3688ff40;
+            background: rgba(54, 136, 255, 0.30);
+            transform: translateY(-4px) scale(1.04);
+            border-color: rgba(99, 179, 255, 0.50);
+            box-shadow: 0 10px 30px rgba(54, 136, 255, 0.20);
         }
         .labTag:active {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 3px 10px #3688ff30;
+            transform: translateY(-1px) scale(0.96);
+            transition-duration: 0.08s;
         }
+
+        .labTag.loading {
+            pointer-events: none;
+            color: transparent;
+        }
+        .labTag.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #63b3ff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: spin 0.7s linear infinite;
+            opacity: 1;
+            background: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* ===== 按钮 ===== */
         .funcBtn {
-            margin-top: 24px;
-            padding: 12px 32px;
+            margin-top: 28px;
+            padding: 14px 40px;
             border: none;
             border-radius: 50px;
-            background: linear-gradient(90deg, #2470e0, #4898ff);
-            color: white;
+            background: linear-gradient(135deg, #1a5fd0, #4898ff);
+            color: #fff;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s ease;
-            will-change: transform;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
+            letter-spacing: 1px;
+            will-change: transform, box-shadow;
+            box-shadow: 0 4px 20px rgba(54, 136, 255, 0.25);
         }
+        .funcBtn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent 60%);
+            pointer-events: none;
+        }
+        .funcBtn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.15), transparent 50%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        .funcBtn:hover::after {
+            opacity: 1;
+        }
+        .funcBtn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(54, 136, 255, 0.35);
+        }
+        .funcBtn:active {
+            transform: translateY(0) scale(0.97);
+            transition-duration: 0.08s;
+            box-shadow: 0 4px 15px rgba(54, 136, 255, 0.20);
+        }
+
         .funcBtn.loading {
             pointer-events: none;
             color: transparent;
@@ -197,185 +316,291 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #fff;
-            border-top-color: transparent;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #fff;
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.7s linear infinite;
+            opacity: 1;
+            background: none;
         }
-        @keyframes spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        .funcBtn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 8px 20px #3688ff55;
-        }
-        .funcBtn:active {
-            transform: scale(1.02);
-            box-shadow: 0 4px 12px #3688ff35;
-        }
+
+        /* ===== 页脚 ===== */
         footer {
             text-align: center;
             margin-top: 100px;
             padding: 20px;
             color: #88a8d8;
-            animation: fadeBottom 2s ease 1s forwards;
             opacity: 0;
+            animation: footerFade 1.2s ease 1.2s forwards;
+            font-size: 14px;
+            letter-spacing: 1px;
         }
-        @keyframes fadeBottom {
-            to {opacity: 1;}
+        @keyframes footerFade {
+            to {
+                opacity: 0.6;
+            }
         }
-        /* 全局提示弹窗 */
+        footer:hover {
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        /* ===== 提示弹窗 ===== */
         .tip-modal {
             position: fixed;
             top: 30px;
             left: 50%;
-            transform: translate(-50%, -40px);
-            background: rgba(15, 25, 50, 0.96);
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(99, 179, 255, 0.35);
-            border-radius: 14px;
-            padding: 18px 28px;
+            transform: translate(-50%, -50px) scale(0.92);
+            background: rgba(10, 20, 45, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 179, 255, 0.30);
+            border-radius: 16px;
+            padding: 16px 28px;
             display: flex;
             align-items: center;
             gap: 16px;
             z-index: 9999;
             opacity: 0;
-            box-shadow: 0 8px 24px rgba(54, 136, 255, 0.2);
-            animation: modalIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            will-change: transform;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 40px rgba(54, 136, 255, 0.08);
+            animation: modalIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             max-width: 90%;
+            pointer-events: auto;
         }
         @keyframes modalIn {
             to {
                 opacity: 1;
-                transform: translate(-50%, 0);
+                transform: translate(-50%, 0) scale(1);
             }
         }
         .tip-modal.fade-out {
-            animation: modalOut 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: modalOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes modalOut {
             to {
                 opacity: 0;
-                transform: translate(-50%, -40px);
+                transform: translate(-50%, -40px) scale(0.92);
             }
         }
+
         .tip-text {
-            color: #fff;
+            color: #f0f8ff;
             font-size: 15px;
-            line-height: 1.4;
+            line-height: 1.5;
+            font-weight: 400;
         }
         .tip-close {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
-            border: 1px solid #63b3ff;
+            border: 1px solid rgba(99, 179, 255, 0.4);
             color: #63b3ff;
             display: grid;
             place-items: center;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.25s ease;
+            font-size: 16px;
+            flex-shrink: 0;
+            background: transparent;
         }
         .tip-close:hover {
             background: #63b3ff;
-            color: #000;
+            color: #050a20;
+            transform: rotate(90deg) scale(1.08);
+            border-color: #63b3ff;
         }
 
-        /* 大学物理弹窗：修复重复点击bug */
-        .physics-popup-wrap {
+        /* ===== 通用弹窗 (物理 / 数字电路 / 大学计算机) ===== */
+        .popup-wrap {
             position: fixed;
             inset: 0;
+            visibility: hidden;
+            opacity: 0;
+            background: rgba(0, 0, 0, 0.60);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9998;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(0,0,0,0.65);
-            z-index: 9998;
-            /* 不用display:none，用透明度+点击拦截 */
-            opacity: 0;
-            visibility: hidden;
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: none;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .physics-popup-wrap.show {
-            opacity: 1;
+
+        .popup-wrap.show {
             visibility: visible;
+            opacity: 1;
             pointer-events: auto;
         }
-        .physics-popup {
-            background: #0e1b3d;
-            border: 1px solid #63b3ff50;
-            border-radius: 18px;
-            padding: 28px;
-            max-width: 720px;
+
+        .popup-box {
+            background: linear-gradient(145deg, #0e1b3d, #0a1430);
+            border: 1px solid rgba(99, 179, 255, 0.25);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 740px;
             width: 100%;
-            max-height: 85vh;
+            max-height: 80vh;
             overflow-y: auto;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
+            transform: scale(0.88) translateY(30px);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
         }
-        .physics-popup-wrap.show .physics-popup {
-            transform: scale(1);
+
+        .popup-wrap.show .popup-box {
+            transform: scale(1) translateY(0);
         }
+
+        .popup-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .popup-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .popup-box::-webkit-scrollbar-thumb {
+            background: rgba(99, 179, 255, 0.3);
+            border-radius: 4px;
+        }
+
         .popup-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(99, 179, 255, 0.10);
         }
+
         .popup-head h3 {
             color: #63b3ff;
             font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        /* 关闭按钮hover+按压回弹 */
+        .popup-head h3::before {
+            font-size: 26px;
+        }
+        /* 各弹窗标题图标 */
+        #physicsPopup .popup-head h3::before {
+            content: '⚛';
+        }
+        #digitalPopup .popup-head h3::before {
+            content: '🔌';
+        }
+        #computerPopup .popup-head h3::before {
+            content: '💻';
+        }
+
         .popup-close {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #63b3ff;
+            width: 32px;
+            height: 32px;
+            border: 1px solid rgba(99, 179, 255, 0.3);
             border-radius: 50%;
             display: grid;
             place-items: center;
             color: #63b3ff;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 20px;
+            line-height: 1;
+            flex-shrink: 0;
+            background: rgba(99, 179, 255, 0.05);
         }
         .popup-close:hover {
             background: #63b3ff;
-            color: #000;
-            transform: scale(1.1);
+            color: #050a20;
+            transform: rotate(90deg) scale(1.1);
+            border-color: #63b3ff;
         }
         .popup-close:active {
-            transform: scale(0.9);
+            transform: rotate(90deg) scale(0.9);
         }
-        .physics-list {
+
+        .popup-list {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
         }
-        .physics-item {
-            padding: 9px 16px;
-            border: 1px solid #63b3ff33;
+
+        .popup-item {
+            padding: 10px 20px;
+            border: 1px solid rgba(99, 179, 255, 0.18);
             border-radius: 30px;
-            background: rgba(99,179,255,0.08);
+            background: rgba(54, 136, 255, 0.08);
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #c8dfff;
+            transform: translateY(0);
         }
-        .physics-item:hover {
-            background: #3688ff;
+        .popup-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 30px;
+            background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.12), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
         }
-        @media (max-width:768px){
-            .header{
+        .popup-item:hover::after {
+            opacity: 1;
+        }
+        .popup-item:hover {
+            background: rgba(54, 136, 255, 0.30);
+            transform: translateY(-3px) scale(1.04);
+            border-color: rgba(99, 179, 255, 0.50);
+            box-shadow: 0 8px 24px rgba(54, 136, 255, 0.15);
+            color: #fff;
+        }
+        .popup-item:active {
+            transform: translateY(0) scale(0.95);
+            transition-duration: 0.08s;
+        }
+
+        .popup-item.loading {
+            pointer-events: none;
+            color: transparent;
+        }
+        .popup-item.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            border: 2.5px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #63b3ff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: spin 0.7s linear infinite;
+            opacity: 1;
+            background: none;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .header {
                 justify-content: center;
-                margin: 40px 0 60px;
+                margin: 40px 0 50px;
             }
-            .name-box{
-                text-align:center;
+            .name-box {
+                text-align: center;
             }
-            .main-name{
-                font-size:32px;
+            .main-name {
+                font-size: 36px;
             }
             .subTitle {
                 font-size: 16px;
@@ -388,188 +613,586 @@
             .card h2 {
                 font-size: 20px;
             }
+            .card h2::after {
+                display: none;
+            }
             .labTag {
-                padding: 8px 16px;
+                padding: 8px 18px;
                 font-size: 14px;
             }
             .funcBtn {
                 width: 100%;
-                padding: 12px 0;
+                padding: 14px 0;
+                text-align: center;
             }
-            .physics-popup {
-                padding: 20px;
+            .popup-box {
+                padding: 24px 20px;
+                max-height: 75vh;
+            }
+            .popup-head h3 {
+                font-size: 19px;
+            }
+            .popup-close {
+                width: 28px;
+                height: 28px;
+                font-size: 18px;
+            }
+            .popup-item {
+                padding: 8px 16px;
+                font-size: 13px;
             }
         }
-        @media (max-width:480px) {
+
+        @media (max-width: 480px) {
             .main-name {
                 font-size: 28px;
             }
             .labList {
                 gap: 10px;
             }
+            .labTag {
+                padding: 6px 14px;
+                font-size: 13px;
+            }
             .tip-modal {
-                padding: 14px 20px;
+                padding: 12px 18px;
+                top: 16px;
+            }
+            .tip-text {
+                font-size: 14px;
+            }
+            .popup-close {
+                width: 24px;
+                height: 24px;
+                font-size: 16px;
+            }
+            .popup-box {
+                padding: 18px 14px;
+            }
+            .popup-item {
+                padding: 6px 14px;
+                font-size: 12px;
             }
         }
     </style>
 </head>
 <body>
+
+    <!-- ===== 星空粒子背景 ===== -->
+    <canvas id="starfield"></canvas>
+
+    <!-- ===== 主内容 ===== -->
     <div class="container">
-        <div class="header">
+
+        <header class="header">
             <div class="name-box">
                 <h1 class="main-name">Draco</h1>
-                <p class="subTitle">深圳大学 | 实验报告收纳个人主页</p>
+                <p class="subTitle">深圳大学 · 实验报告收纳</p>
             </div>
-        </div>
-        <div class="card">
+        </header>
+
+        <div class="card" data-delay="0">
             <h2>👤 个人简介</h2>
-            <p>我是Draco，现就读于深圳大学，本页面用于收纳、分享各科实验报告，方便自己和同学查阅下载。</p>
+            <p>我是 Draco，现就读于深圳大学，本页面用于收纳、分享各科实验报告，方便自己和同学查阅下载。</p>
         </div>
-        <div class="card">
+
+        <div class="card" data-delay="150">
             <h2>📂 实验报告分类仓库</h2>
             <p>点击对应科目查看实验目录：</p>
             <div class="labList">
                 <div class="labTag" id="openPhysicsBtn">大学物理实验</div>
                 <div class="labTag" data-link="link11">计算机与系统概论实验</div>
-                <div class="labTag" data-link="link13">数字电路实验</div>
-                <div class="labTag" data-link="link12">大学计算机实验</div>
+                <div class="labTag" id="openDigitalBtn">数字电路实验</div>
+                <!-- 原占位标签“大学计算机实验”现改为触发弹窗 -->
+                <div class="labTag" id="openComputerBtn">大学计算机实验</div>
             </div>
-            <div class="empty-tip">💡 点击大学物理可展开细分实验弹窗</div>
+            <div class="empty-tip">点击科目名称可展开细分实验列表</div>
             <button class="funcBtn" onclick="openLabStorage()">进入完整报告仓库</button>
         </div>
+
         <footer>
             Draco · 深圳大学 | 实验报告专用收纳主页 © 2026
         </footer>
     </div>
 
-    <!-- 大学物理细分弹窗 -->
-    <div class="physics-popup-wrap" id="physicsPopup">
-        <div class="physics-popup">
+    <!-- ===== 大学物理细分弹窗 ===== -->
+    <div class="popup-wrap" id="physicsPopup">
+        <div class="popup-box" onclick="event.stopPropagation()">
             <div class="popup-head">
                 <h3>大学物理细分实验</h3>
                 <span class="popup-close" id="closePhysicsPopup">×</span>
             </div>
-            <div class="physics-list">
-                <div class="physics-item" data-phys="p1">薄透镜实验</div>
-                <div class="physics-item" data-phys="p2">磁特性综合实验</div>
-                <div class="physics-item" data-phys="p3">等厚干涉</div>
-                <div class="physics-item" data-phys="p4">电子秤的设计</div>
-                <div class="physics-item" data-phys="p5">多普勒效应测声速</div>
-                <div class="physics-item" data-phys="p6">费米达拉克分布</div>
-                <div class="physics-item" data-phys="p7">光敏电阻特性研究</div>
-                <div class="physics-item" data-phys="p8">基于multisim的电源设计</div>
-                <div class="physics-item" data-phys="p9">杨氏模量的测量</div>
-                <div class="physics-item" data-phys="p10">准稳态法测比热导热系数</div>
+            <div class="popup-list">
+                <div class="popup-item" data-phys="p1">薄透镜实验</div>
+                <div class="popup-item" data-phys="p2">磁特性综合实验</div>
+                <div class="popup-item" data-phys="p3">等厚干涉</div>
+                <div class="popup-item" data-phys="p4">电子秤的设计</div>
+                <div class="popup-item" data-phys="p5">多普勒效应测声速</div>
+                <div class="popup-item" data-phys="p6">费米达拉克分布</div>
+                <div class="popup-item" data-phys="p7">光敏电阻特性研究</div>
+                <div class="popup-item" data-phys="p8">基于 multisim 的电源设计</div>
+                <div class="popup-item" data-phys="p9">杨氏模量的测量</div>
+                <div class="popup-item" data-phys="p10">准稳态法测比热导热系数</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 数字电路细分弹窗 ===== -->
+    <div class="popup-wrap" id="digitalPopup">
+        <div class="popup-box" onclick="event.stopPropagation()">
+            <div class="popup-head">
+                <h3>数字电路细分实验</h3>
+                <span class="popup-close" id="closeDigitalPopup">×</span>
+            </div>
+            <div class="popup-list">
+                <div class="popup-item" data-digital="d1">门电路逻辑功能及测试</div>
+                <div class="popup-item" data-digital="d2">译码器功能测试及应用</div>
+                <div class="popup-item" data-digital="d3">数据选择器</div>
+                <div class="popup-item" data-digital="d4">集成触发器功能测试及转换</div>
+                <div class="popup-item" data-digital="d5">彩灯流水电路的设计</div>
+                <div class="popup-item" data-digital="d6">555 定时器电路</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 大学计算机细分弹窗（新增） ===== -->
+    <div class="popup-wrap" id="computerPopup">
+        <div class="popup-box" onclick="event.stopPropagation()">
+            <div class="popup-head">
+                <h3>大学计算机细分实验</h3>
+                <span class="popup-close" id="closeComputerPopup">×</span>
+            </div>
+            <div class="popup-list">
+                <!-- 实验名称与图片完全一致 -->
+                <div class="popup-item" data-computer="c1">实验1-文字信息处理+AI辅助工具使用</div>
+                <div class="popup-item" data-computer="c2">实验2-电子表格处理+AI辅助工具使用</div>
+                <div class="popup-item" data-computer="c3">实验3-演示文稿制作+AI辅助工具使用</div>
+                <div class="popup-item" data-computer="c4">实验4-算法设计工具—Python编程能力</div>
+                <div class="popup-item" data-computer="c5">实验5-算法设计工具—综合性任务的编程能力</div>
+                <div class="popup-item" data-computer="c6">实验6-生成式人工智能工具辅助的创作型实验</div>
             </div>
         </div>
     </div>
 
     <script>
-        // 物理细分实验链接（保留你原始tree链接）
+        // ============================================================
+        // 1. 星空粒子 (Canvas)
+        // ============================================================
+        (function initStars() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            let W, H;
+            const stars = [];
+            const COUNT = 180;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Star {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * W;
+                    this.y = Math.random() * H;
+                    this.r = Math.random() * 1.8 + 0.4;
+                    this.speed = 0.08 + Math.random() * 0.12;
+                    this.opacity = 0.3 + Math.random() * 0.7;
+                    this.drift = (Math.random() - 0.5) * 0.2;
+                }
+                update() {
+                    this.y += this.speed;
+                    this.x += this.drift;
+                    if (this.y > H + 10) {
+                        this.y = -10;
+                        this.x = Math.random() * W;
+                        this.drift = (Math.random() - 0.5) * 0.2;
+                    }
+                    if (this.x < -10) this.x = W + 10;
+                    if (this.x > W + 10) this.x = -10;
+                    this.twinkle = 0.7 + 0.3 * Math.sin(Date.now() * 0.001 + this.x);
+                }
+                draw() {
+                    const alpha = this.opacity * this.twinkle;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(180, 215, 255, ${alpha * 0.9})`;
+                    ctx.fill();
+                    if (this.r > 1.2) {
+                        ctx.shadowColor = 'rgba(99, 179, 255, 0.15)';
+                        ctx.shadowBlur = 12;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.r * 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(99, 179, 255, ${alpha * 0.06})`;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+
+            for (let i = 0; i < COUNT; i++) {
+                stars.push(new Star());
+            }
+
+            let frameId = null;
+
+            function drawStars() {
+                ctx.clearRect(0, 0, W, H);
+                stars.forEach(s => {
+                    s.update();
+                    s.draw();
+                });
+                frameId = requestAnimationFrame(drawStars);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (frameId) cancelAnimationFrame(frameId);
+                } else {
+                    if (frameId) cancelAnimationFrame(frameId);
+                    drawStars();
+                }
+            });
+
+            drawStars();
+        })();
+
+        // ============================================================
+        // 2. 卡片入场动画
+        // ============================================================
+        const cards = document.querySelectorAll('.card');
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const delay = parseInt(el.dataset.delay) || 0;
+                    setTimeout(() => {
+                        el.classList.add('active');
+                    }, delay);
+                    cardObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+
+        cards.forEach(c => cardObserver.observe(c));
+
+        // ============================================================
+        // 3. 卡片 3D 悬停
+        // ============================================================
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                const rotX = y * 4;
+                const rotY = x * -4;
+                card.style.transform =
+                    `perspective(1200px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(0) scale(1)`;
+                card.style.transition = 'transform 0.08s linear';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+                card.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+            });
+        });
+
+        // ============================================================
+        // 4. 鼠标跟随光效 (通用)
+        // ============================================================
+        document.querySelectorAll('.labTag, .popup-item, .funcBtn').forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                el.style.setProperty('--mx', x + '%');
+                el.style.setProperty('--my', y + '%');
+            });
+        });
+
+        // ============================================================
+        // 5. 功能逻辑
+        // ============================================================
+
+        // ----- 物理链接映射 -----
         const physicsLinks = {
-            p1: "https://github.com/blackchickenQ/myLabReport/tree/main/薄透镜实验",
-            p2: "https://github.com/blackchickenQ/myLabReport/tree/main/磁特性综合实验",
-            p3: "https://github.com/blackchickenQ/myLabReport/tree/main/等厚干涉",
-            p4: "https://github.com/blackchickenQ/myLabReport/tree/main/电子秤的设计",
-            p5: "https://github.com/blackchickenQ/myLabReport/tree/main/多普勒效应测声速",
-            p6: "https://github.com/blackchickenQ/myLabReport/tree/main/费米达拉克分布",
-            p7: "https://github.com/blackchickenQ/myLabReport/tree/main/光敏电阻特性研究",
-            p8: "https://github.com/blackchickenQ/myLabReport/tree/main/基于multisim的电源设计",
-            p9: "https://github.com/blackchickenQ/myLabReport/tree/main/杨氏模量的测量",
-            p10: "https://github.com/blackchickenQ/myLabReport/tree/main/准稳态法测比热导热系数"
-        };
-        // 其余三科链接
-        const reportLinks = {
-            link11: "", // 计算机与系统概论
-            link12: "", // 大学计算机
-            link13: ""  // 数字电路
+            p1: 'https://github.com/blackchickenQ/myLabReport/tree/main/薄透镜实验',
+            p2: 'https://github.com/blackchickenQ/myLabReport/tree/main/磁特性综合实验',
+            p3: 'https://github.com/blackchickenQ/myLabReport/tree/main/等厚干涉',
+            p4: 'https://github.com/blackchickenQ/myLabReport/tree/main/电子秤的设计',
+            p5: 'https://github.com/blackchickenQ/myLabReport/tree/main/多普勒效应测声速',
+            p6: 'https://github.com/blackchickenQ/myLabReport/tree/main/费米达拉克分布',
+            p7: 'https://github.com/blackchickenQ/myLabReport/tree/main/光敏电阻特性研究',
+            p8: 'https://github.com/blackchickenQ/myLabReport/tree/main/基于multisim的电源设计',
+            p9: 'https://github.com/blackchickenQ/myLabReport/tree/main/杨氏模量的测量',
+            p10: 'https://github.com/blackchickenQ/myLabReport/tree/main/准稳态法测比热导热系数'
         };
 
-        // 弹窗提示
-        function showTip(msg) {
-            const oldModal = document.querySelector(".tip-modal");
-            if(oldModal) oldModal.remove();
-            const modal = document.createElement("div");
-            modal.className = "tip-modal";
+        // ----- 数字电路链接映射 -----
+        const digitalLinks = {
+            d1: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验一', // 门电路逻辑功能及测试
+            d2: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验二', // 译码器功能测试及应用
+            d3: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验三', // 数据选择器
+            d4: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验四', // 集成触发器功能测试及转换
+            d5: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验五', // 彩灯流水电路的设计
+            d6: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验六'  // 555 定时器电路
+        };
+
+        // ----- ★★★ 大学计算机链接映射 ★★★ -----
+        // 在这里填写每个实验对应的 GitHub 仓库链接
+        const computerLinks = {
+            c1: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验1-文字信息处理%2BAI辅助工具使用', // 实验1-文字信息处理+AI辅助工具使用
+            c2: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验2-电子表格处理%2BAI辅助工具使用', // 实验2-电子表格处理+AI辅助工具使用
+            c3: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验3-演示文稿制作%2BAI辅助工具使用', // 实验3-演示文稿制作+AI辅助工具使用
+            c4: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验4-算法设计工具—Python编程能力', // 实验4-算法设计工具—Python编程能力
+            c5: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验5-算法设计工具—综合性任务的编程能力', // 实验5-算法设计工具—综合性任务的编程能力
+            c6: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验6-生成式人工智能工具辅助的创作型实验/实验6-生成式人工智能工具辅助的创作型实验'  // 实验6-生成式人工智能工具辅助的创作型实验
+        };
+        // ----- 其他科目 (占位) -----
+        const reportLinks = {
+            link11: '',
+            link13: ''
+        };
+
+        // ----- 提示弹窗 -----
+        function showTip(msg, duration = 2800) {
+            const oldModal = document.querySelector('.tip-modal');
+            if (oldModal) oldModal.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'tip-modal';
             modal.innerHTML = `
                 <span class="tip-text">${msg}</span>
                 <span class="tip-close">×</span>
             `;
             document.body.appendChild(modal);
-            modal.querySelector(".tip-close").onclick = () => {
-                modal.classList.add("fade-out");
-                setTimeout(() => modal.remove(), 350);
+
+            const closeBtn = modal.querySelector('.tip-close');
+            const closeModal = () => {
+                if (modal.classList.contains('fade-out')) return;
+                modal.classList.add('fade-out');
+                setTimeout(() => modal.remove(), 400);
             };
-            setTimeout(() => {
-                if(!modal.classList.contains("fade-out")) {
-                    modal.classList.add("fade-out");
-                    setTimeout(() => modal.remove(), 350);
-                }
-            }, 3000);
-        }
+            closeBtn.onclick = closeModal;
+            modal.onclick = (e) => {
+                if (e.target === modal) closeModal();
+            };
 
-        // 卡片滚动动画
-        const cards = document.querySelectorAll(".card");
-        const observe = new IntersectionObserver((items) => {
-            items.forEach(item => {
-                if(item.isIntersecting) {
-                    item.target.classList.add("active");
-                    observe.unobserve(item.target);
-                }
+            const timer = setTimeout(() => {
+                if (!modal.classList.contains('fade-out')) closeModal();
+            }, duration);
+
+            modal.addEventListener('mouseenter', () => clearTimeout(timer));
+            modal.addEventListener('mouseleave', () => {
+                setTimeout(() => {
+                    if (!modal.classList.contains('fade-out')) closeModal();
+                }, 1200);
             });
-        }, { threshold: 0.15 });
-        cards.forEach(c => observe.observe(c));
+        }
 
-        // 仓库按钮
-        function openLabStorage(){
-            const btn = document.querySelector(".funcBtn");
-            btn.classList.add("loading");
+       // ----- 仓库按钮 -----
+function openLabStorage() {
+    const btn = document.querySelector('.funcBtn');
+    btn.classList.add('loading');
+    
+    // ★★★ 在这里替换为你的完整报告仓库根链接（例如 GitHub 仓库主页） ★★★
+    const repoUrl = 'https://github.com/blackchickenQ/myLabReport'; 
+
+    showTip('正在跳转至完整报告仓库... 📦', 1500);
+    setTimeout(() => {
+        window.open(repoUrl, '_blank');  // 新窗口打开
+        // 如果想在当前窗口跳转，把上面这行换成：window.location.href = repoUrl;
+        btn.classList.remove('loading');
+    }, 800);
+}
+
+        // ============================================================
+        // 6. 大学物理弹窗
+        // ============================================================
+        const physicsPopup = document.getElementById('physicsPopup');
+        const openPhysicsBtn = document.getElementById('openPhysicsBtn');
+        const closePhysicsBtn = document.getElementById('closePhysicsPopup');
+
+        openPhysicsBtn.onclick = () => {
+            openPhysicsBtn.classList.add('loading');
+            showTip('正在加载大学物理实验列表 ⚛', 1200);
             setTimeout(() => {
-                btn.classList.remove("loading");
-                showTip("完整汇总仓库正在整理，敬请等待更新");
-            }, 800);
-        }
-
-        const popupWrap = document.getElementById("physicsPopup");
-        const openBtn = document.getElementById("openPhysicsBtn");
-        const closeBtn = document.getElementById("closePhysicsPopup");
-
-        // 打开弹窗：直接加show类，无延时
-        openBtn.onclick = () => {
-            popupWrap.classList.add("show");
-        };
-        // 关闭弹窗：直接移除show，无延时display操作
-        function closePopup() {
-            popupWrap.classList.remove("show");
-        }
-        closeBtn.onclick = closePopup;
-        popupWrap.onclick = (e) => {
-            if(e.target === popupWrap) closePopup();
+                openPhysicsBtn.classList.remove('loading');
+                physicsPopup.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }, 700);
         };
 
-        // 弹窗内10个实验点击跳转
-        document.querySelectorAll(".physics-item").forEach(item => {
-            item.onclick = function(){
-                const key = this.getAttribute("data-phys");
+        function closePhysicsPopup() {
+            physicsPopup.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        closePhysicsBtn.onclick = closePhysicsPopup;
+        physicsPopup.onclick = (e) => {
+            if (e.target === physicsPopup) closePhysicsPopup();
+        };
+
+        document.querySelectorAll('#physicsPopup .popup-item').forEach(item => {
+            item.onclick = function() {
+                const key = this.getAttribute('data-phys');
                 const url = physicsLinks[key];
-                window.open(url, "_blank");
-                showTip(`正在打开：${this.innerText} 仓库页面`);
+                const self = this;
+                self.classList.add('loading');
+                showTip(`正在加载「${self.innerText}」仓库... 📂`, 1800);
+                setTimeout(() => {
+                    window.open(url, '_blank');
+                    self.classList.remove('loading');
+                }, 600);
+            };
+        });
+
+        // ============================================================
+        // 7. 数字电路弹窗
+        // ============================================================
+        const digitalPopup = document.getElementById('digitalPopup');
+        const openDigitalBtn = document.getElementById('openDigitalBtn');
+        const closeDigitalBtn = document.getElementById('closeDigitalPopup');
+
+        openDigitalBtn.onclick = () => {
+            openDigitalBtn.classList.add('loading');
+            showTip('正在加载数字电路实验列表 🔌', 1200);
+            setTimeout(() => {
+                openDigitalBtn.classList.remove('loading');
+                digitalPopup.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }, 700);
+        };
+
+        function closeDigitalPopup() {
+            digitalPopup.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        closeDigitalBtn.onclick = closeDigitalPopup;
+        digitalPopup.onclick = (e) => {
+            if (e.target === digitalPopup) closeDigitalPopup();
+        };
+
+        document.querySelectorAll('#digitalPopup .popup-item').forEach(item => {
+            item.onclick = function() {
+                const key = this.getAttribute('data-digital');
+                const url = digitalLinks[key];
+                const self = this;
+                if (url && url.trim() !== '') {
+                    self.classList.add('loading');
+                    showTip(`正在加载「${self.innerText}」仓库... 📂`, 1800);
+                    setTimeout(() => {
+                        window.open(url, '_blank');
+                        self.classList.remove('loading');
+                    }, 600);
+                } else {
+                    showTip(`「${self.innerText}」的 GitHub 链接尚未配置，请在 digitalLinks 中添加 🔗`, 3000);
+                }
+            };
+        });
+
+        // ============================================================
+        // 8. 大学计算机弹窗 (新增)
+        // ============================================================
+        const computerPopup = document.getElementById('computerPopup');
+        const openComputerBtn = document.getElementById('openComputerBtn');
+        const closeComputerBtn = document.getElementById('closeComputerPopup');
+
+        openComputerBtn.onclick = () => {
+            openComputerBtn.classList.add('loading');
+            showTip('正在加载大学计算机实验列表 💻', 1200);
+            setTimeout(() => {
+                openComputerBtn.classList.remove('loading');
+                computerPopup.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }, 700);
+        };
+
+        function closeComputerPopup() {
+            computerPopup.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        closeComputerBtn.onclick = closeComputerPopup;
+        computerPopup.onclick = (e) => {
+            if (e.target === computerPopup) closeComputerPopup();
+        };
+
+        document.querySelectorAll('#computerPopup .popup-item').forEach(item => {
+            item.onclick = function() {
+                const key = this.getAttribute('data-computer');
+                const url = computerLinks[key];
+                const self = this;
+                if (url && url.trim() !== '') {
+                    self.classList.add('loading');
+                    showTip(`正在加载「${self.innerText}」仓库... 📂`, 1800);
+                    setTimeout(() => {
+                        window.open(url, '_blank');
+                        self.classList.remove('loading');
+                    }, 600);
+                } else {
+                    showTip(`「${self.innerText}」的 GitHub 链接尚未配置，请在 computerLinks 中添加 🔗`, 3000);
+                }
+            };
+        });
+
+        // ============================================================
+        // 9. ESC 关闭所有弹窗
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (physicsPopup.classList.contains('show')) closePhysicsPopup();
+                if (digitalPopup.classList.contains('show')) closeDigitalPopup();
+                if (computerPopup.classList.contains('show')) closeComputerPopup();
             }
         });
 
-        // 外层三个科目点击逻辑
-        document.querySelectorAll(".labTag[data-link]").forEach(tag => {
-            tag.onclick = function(){
-                const key = this.getAttribute("data-link");
+        // ============================================================
+        // 10. 其他科目 (占位)
+        // ============================================================
+        document.querySelectorAll('.labTag[data-link]').forEach(tag => {
+            tag.onclick = function() {
+                const key = this.getAttribute('data-link');
                 const url = reportLinks[key];
-                if(url && url.trim() !== ""){
-                    window.open(url, "_blank");
-                    showTip(`正在打开：${this.innerText} 仓库页面`);
-                }else{
-                    showTip(`${this.innerText}：暂未上传实验资料，等待更新`);
+                if (url && url.trim() !== '') {
+                    window.open(url, '_blank');
+                    showTip(`正在打开：${this.innerText} 📖`, 1800);
+                } else {
+                    showTip(`${this.innerText}：暂未上传实验资料，等待更新 📌`, 2500);
                 }
             };
         });
+
+        // ============================================================
+        // 11. 补充触发 (卡片入场)
+        // ============================================================
+        setTimeout(() => {
+            cards.forEach(c => {
+                const rect = c.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.85 && !c.classList.contains('active')) {
+                    const delay = parseInt(c.dataset.delay) || 0;
+                    setTimeout(() => c.classList.add('active'), delay);
+                }
+            });
+        }, 300);
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                cards.forEach(c => {
+                    const rect = c.getBoundingClientRect();
+                    if (rect.top < window.innerHeight * 0.85 && !c.classList.contains('active')) {
+                        const delay = parseInt(c.dataset.delay) || 0;
+                        setTimeout(() => c.classList.add('active'), delay);
+                    }
+                });
+            }, 300);
+        });
+
+        console.log('✨ Draco 实验报告主页 · 大学计算机弹窗已添加 ✨');
+        console.log('📌 请在 computerLinks 对象中为每个实验配置 GitHub 链接');
     </script>
 </body>
 </html>
