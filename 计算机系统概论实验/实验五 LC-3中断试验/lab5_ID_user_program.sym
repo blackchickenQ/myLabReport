@@ -1,0 +1,15 @@
+//Symbol Name		Page Address
+//----------------	------------
+//	COUNT                   306D
+//	DELAY                   300E
+//	ENTRANCE                306F
+//	IE                      306A
+//	INTV                    306E
+//	KBDR                    306C
+//	KBSR                    306B
+//	PRINT                   3006
+//	REP                     3010
+//	STACK                   3071
+//	STR1                    3014
+//	STR2                    3041
+//	SaveR1                  3070

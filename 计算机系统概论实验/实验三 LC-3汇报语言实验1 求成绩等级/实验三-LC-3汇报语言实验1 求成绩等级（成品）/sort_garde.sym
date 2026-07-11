@@ -1,0 +1,19 @@
+//Symbol Name		Page Address
+//----------------	------------
+//	A_CNT                   3042
+//	A_GRADE                 3044
+//	B_CNT                   3043
+//	B_GRADE                 3045
+//	DATA                    3040
+//	END2                    301A
+//	IS_B                    3033
+//	LOOP1                   300E
+//	LOOP2                   3010
+//	LOOP3                   302B
+//	LOOP_COPY               3004
+//	MIDDLE1                 301F
+//	MIDDLE2                 301B
+//	MIDDLE3                 3039
+//	MIDDLE_COPY             3009
+//	NEXT                    3038
+//	RESULT                  3041

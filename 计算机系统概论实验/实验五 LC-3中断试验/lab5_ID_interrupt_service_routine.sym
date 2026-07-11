@@ -1,0 +1,14 @@
+//Symbol Name		Page Address
+//----------------	------------
+//	CHECK                   2009
+//	DDR                     202B
+//	DSR                     202A
+//	ENDLINE                 2026
+//	KBDR                    2029
+//	KBSR                    2028
+//	LOOP                    2008
+//	P_ENDL                  2018
+//	P_LOOP                  2012
+//	START                   2013
+//	SaveR0                  2027
+//	_ENDLINE                2025
