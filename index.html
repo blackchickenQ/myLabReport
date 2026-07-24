@@ -2,1198 +2,1156 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Draco | 深圳大学 实验报告收纳</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Draco 的实验报告库</title>
+
+    <!-- 引入 Markdown 解析库与代码高亮样式（保留） -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js">
+    </script>
+
+    <!-- 引入 KaTeX 支持数学公式（保留） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js">
+    </script>
+
     <style>
+        /* ========== 全局与变量 ========== */
         :root {
-            --bg-deep: #070a12;
-            --glass-bg-light: rgba(255, 255, 255, 0.1);
-            --glass-bg-medium: rgba(255, 255, 255, 0.08);
-            --glass-bg-heavy: rgba(12, 18, 32, 0.55);
-            --glass-stroke-top: rgba(255, 255, 255, 0.15);
-            --glass-stroke-bottom: rgba(255, 255, 255, 0.05);
-
-            --accent-sky: #94c8f8;
-            --accent-ocean: #70b8ff;
-            --accent-indigo: #a4b8f0;
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.78);
+            --accent-color: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.25);
             --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #8892a0;
-            --radius-sm: 12px;
-            --radius-md: 18px;
-            --radius-lg: 24px;
-            --radius-full: 999px;
-            --space-1: 8px;
-            --space-2: 16px;
-            --space-3: 24px;
-            --space-4: 32px;
-            --space-5: 48px;
-            --space-6: 64px;
-            --apple-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
-            --apple-smooth: cubic-bezier(0.2, 0, 0.2, 1);
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --sidebar-width: 320px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ========== 性能优化核心：GPU 加速 + will-change ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, SF Pro Display, PingFang SC, Microsoft Yahei, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft Yahei", sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background: var(--bg-deep);
-            min-height: 100vh;
-            overflow-x: hidden;
+            background-color: var(--bg-color);
             color: var(--text-primary);
-            position: relative;
-            line-height: 1.55;
-        }
-
-        .texture-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.02;
-            background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-
-        .moon-glow {
-            position: fixed;
-            top: -80px;
-            right: 12%;
-            width: 280px;
-            height: 280px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(148,200,248,0.07), transparent 72%);
-            filter: blur(12px);
-            pointer-events: none;
-            z-index: 1;
-            /* 优化：使用 transform 动画替代 opacity 混合，减少重绘 */
-            animation: moonFloat 9s ease-in-out infinite;
-            will-change: transform;
-        }
-
-        @keyframes moonFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-18px); }
-        }
-
-        .ocean-depth {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 40vh;
-            background: linear-gradient(to top, rgba(4, 6, 12, 0.65), transparent);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        #starfield {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .container {
-            position: relative;
-            z-index: 3;
-            max-width: 980px;
-            margin: 0 auto;
-            padding: var(--space-5) var(--space-3);
-        }
-
-        .header {
+            line-height: 1.6;
             display: flex;
-            justify-content: flex-end;
-            margin: var(--space-6) 0 var(--space-6);
-            position: relative;
-        }
-
-        .name-box {
-            text-align: right;
-            position: relative;
-        }
-
-        .main-name {
-            font-size: 62px;
-            font-weight: 600;
-            letter-spacing: -1px;
-            color: #ffffff;
-            text-shadow: 0 0 40px rgba(148,200,248,0.09);
-            line-height: 1.1;
-            display: flex;
-            justify-content: flex-end;
-            gap: 2px;
-        }
-
-        .main-name .char {
-            display: inline-block;
-            opacity: 0;
-            transform: translateY(40px);
-            animation: charEnter 0.7s var(--apple-spring) forwards;
-            /* 优化：will-change 提前声明，动画结束后移除 */
-            will-change: transform, opacity;
-        }
-
-        @keyframes charEnter {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .subTitle {
-            font-size: 14px;
-            color: var(--text-muted);
-            letter-spacing: 3px;
-            margin-top: var(--space-2);
-            opacity: 0;
-            animation: fadeUp 1s var(--apple-smooth) 0.7s forwards;
-            font-weight: 400;
-            will-change: transform, opacity;
-        }
-
-        .name-decoration {
-            width: 64px;
-            height: 1.5px;
-            margin: var(--space-2) 0 0 auto;
-            opacity: 0;
-            background: linear-gradient(90deg, transparent, var(--accent-sky), transparent);
-            animation: expandWidth 1.1s var(--apple-smooth) 0.9s forwards;
-            border-radius: var(--radius-full);
-            will-change: width, opacity;
-        }
-
-        @keyframes expandWidth {
-            from { width: 0; opacity: 0; }
-            to { width: 64px; opacity: 0.55; }
-        }
-
-        @keyframes fadeUp {
-            to { opacity: 0.65; transform: translateY(0); }
-        }
-
-        /* ========== 卡片优化：减少阴影层级，使用 transform 替代 top/left ========== */
-        .card {
-            position: relative;
-            background: rgba(12, 18, 32, 0.80);
-            border-top: 1px solid var(--glass-stroke-top);
-            border-bottom: 1px solid var(--glass-stroke-bottom);
-            border-radius: var(--radius-lg);
-            padding: var(--space-4);
-            margin: var(--space-4) 0;
-            opacity: 0;
-            transform: translateY(40px);
-            transition: transform 0.4s var(--apple-spring), box-shadow 0.4s ease, border-color 0.3s ease;
+            min-height: 100vh;
             overflow: hidden;
-            /* 优化：单层阴影替代多层，减少合成层压力 */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-            will-change: transform, opacity;
+            /* 防止滚动条跳动 */;
         }
 
-        .card.active {
-            opacity: 1;
-            transform: translateY(0);
-            animation: cardSpring 0.8s var(--apple-spring) forwards;
-        }
-
-        @keyframes cardSpring {
-            0% { opacity: 0; transform: translateY(40px); }
-            60% { opacity: 1; transform: translateY(-4px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 30px;
-            bottom: 30px;
-            width: 2px;
-            border-radius: var(--radius-full);
-            background: linear-gradient(180deg, transparent, var(--accent-sky), transparent);
-            opacity: 0.35;
-            transition: all 0.4s ease;
-        }
-
-        .card:hover::before {
-            opacity: 0.65;
-            top: 22px;
-            bottom: 22px;
-        }
-
-        .card:hover {
-            border-top-color: rgba(255,255,255,0.18);
-            /* 优化：减少阴影扩散范围，降低 GPU 负担 */
-            box-shadow: 0 12px 36px rgba(0,0,0,0.28);
-            transform: translateY(-4px);
-        }
-
-        .card h2 {
-            color: var(--accent-sky);
-            margin-bottom: var(--space-3);
-            font-size: 19px;
+        /* ========== 侧边栏（目录） ========== */
+        sidebar {
+            width: var(--sidebar-width);
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 1.25rem 1rem;
             display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            letter-spacing: 0.2px;
-            font-weight: 600;
-        }
-
-        .card h2 .icon {
-            width: 34px;
-            height: 34px;
-            border-radius: var(--radius-sm);
-            background: rgba(20, 30, 55, 0.92);
-            border: 1px solid var(--glass-stroke-top);
-            display: grid;
-            place-items: center;
-            font-size: 17px;
-            flex-shrink: 0;
-        }
-
-        .card p {
-            color: var(--text-secondary);
-            font-size: 15px;
-            line-height: 1.7;
-            letter-spacing: 0.1px;
-        }
-
-        .card-meta {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            margin-top: var(--space-3);
-            color: var(--text-muted);
-            font-size: 12.5px;
-            letter-spacing: 0.3px;
-        }
-
-        .card-meta .dot {
-            width: 5px;
-            height: 5px;
-            border-radius: var(--radius-full);
-            background: var(--accent-sky);
-            opacity: 0.6;
-            box-shadow: 0 0 8px rgba(148,200,248,0.35);
-            animation: gentlePulse 3.2s ease-in-out infinite;
-            will-change: transform, opacity;
-        }
-
-        @keyframes gentlePulse {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.25); }
-        }
-
-        .empty-tip {
-            color: var(--text-muted);
-            font-size: 13px;
-            margin-top: var(--space-3);
-            display: flex;
-            align-items: center;
-            gap: var(--space-1);
-            opacity: 0;
-            animation: fadeIn 1s ease 1.5s forwards;
-            will-change: opacity;
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 0.6; }
-        }
-
-        .labList {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space-2);
-            margin-top: var(--space-3);
-        }
-
-        /* ========== 标签优化：使用 transform 替代位置属性 ========== */
-        .labTag {
-            padding: 10px 20px;
-            background: rgba(20, 30, 55, 0.92);
-            border-top: 1px solid var(--glass-stroke-top);
-            border-bottom: 1px solid var(--glass-stroke-bottom);
-            border-radius: var(--radius-full);
-            /* 优化：只保留 transform 和 opacity 的过渡，避免触发 layout */
-            transition: transform 0.22s var(--apple-spring), opacity 0.22s ease, box-shadow 0.22s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            user-select: none;
-            font-weight: 500;
-            font-size: 14px;
-            color: var(--text-secondary);
-            letter-spacing: 0.1px;
-            display: flex;
-            align-items: center;
-            will-change: transform;
-            --mx: 50%;
-            --my: 50%;
-        }
-
-        .labTag::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(120px circle at var(--mx) var(--my), rgba(148,200,248,0.12), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            /* 优化：光晕层独立合成，不触发重绘 */
-            will-change: opacity;
-        }
-
-        .labTag:hover::before {
-            opacity: 1;
-        }
-
-        .labTag .tag-num {
-            flex-shrink: 0;
-            width: 20px;
-            height: 20px;
-            border-radius: var(--radius-full);
-            background: rgba(148,200,248,0.1);
-            color: var(--accent-sky);
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 20px;
-            text-align: center;
-            margin-right: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .labTag:hover .tag-num {
-            background: var(--accent-sky);
-            color: var(--bg-deep);
-        }
-
-        .labTag:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-top-color: rgba(255,255,255,0.18);
-            transform: translateY(-3px);
-            color: #f1f5f9;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.22);
-        }
-
-        .labTag:active {
-            transform: scale(0.96);
-            transition-duration: 0.07s;
-        }
-
-        .funcBtn {
-            margin-top: var(--space-4);
-            padding: 13px 34px;
-            border: none;
-            border-radius: var(--radius-full);
-            background: linear-gradient(135deg, #2277d8, #6066e0);
-            color: #fff;
-            font-size: 14.5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.22s var(--apple-spring), box-shadow 0.22s ease;
-            position: relative;
-            overflow: hidden;
-            letter-spacing: 0.3px;
-            box-shadow: 0 6px 20px rgba(34,119,216,0.18);
-            will-change: transform;
-        }
-
-        .funcBtn::after {
-            content: '';
-            position: absolute;
+            flex-direction: column;
+            position: fixed;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
-            transition: left 0.7s ease;
+            left: 0;
+            height: 100vh;
+            z-index: 10;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.06) transparent;
+            transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1),
+                box-shadow 0.35s ease;
+            will-change: transform;
         }
 
-        .funcBtn:hover::after {
-            left: 100%;
+        sidebar::-webkit-scrollbar {
+            width: 3px;
+        }
+        sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
         }
 
-        .funcBtn:hover {
-            transform: translateY(-3px) scale(1.015);
-            box-shadow: 0 10px 30px rgba(34,119,216,0.24);
-        }
-
-        .funcBtn:active {
-            transform: translateY(0) scale(0.97);
-            transition-duration: 0.07s;
-        }
-
-        footer {
+        /* 个人简介 */
+        .profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
-            margin-top: var(--space-6);
-            padding: var(--space-3);
-            color: var(--text-muted);
-            opacity: 0;
-            animation: footerFade 1.5s ease 2s forwards;
-            font-size: 12.5px;
-            letter-spacing: 1.2px;
-            font-weight: 300;
-            will-change: opacity;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
-        @keyframes footerFade {
-            to { opacity: 0.4; }
-        }
-
-        /* ========== 弹窗优化：减少 backdrop-filter 使用，改用纯色背景 ========== */
-        .popup-wrap {
-            position: fixed;
-            inset: 0;
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
             display: flex;
             align-items: center;
             justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            /* 优化：去掉 backdrop-filter，使用纯色半透明背景，性能提升显著 */
-            background: rgba(0, 0, 0, 0.65);
-            z-index: 9998;
-            transition: opacity 0.22s var(--apple-smooth), visibility 0.22s var(--apple-smooth);
-            pointer-events: none;
-            padding: 20px;
+            font-size: 1.8rem;
+            box-shadow: 0 0 20px var(--accent-glow);
+            margin-bottom: 0.6rem;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+        .avatar:hover {
+            transform: scale(1.04) rotate(4deg);
         }
 
-        .popup-wrap.show {
-            visibility: visible;
-            opacity: 1;
-            pointer-events: auto;
+        .profile-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.1rem;
         }
 
-        .popup-box {
-            position: relative;
-            /* 优化：去掉 backdrop-filter，使用接近不透明的纯色背景 */
-            background: rgba(12, 18, 32, 0.98);
-            border-top: 1px solid var(--glass-stroke-top);
-            border-bottom: 1px solid var(--glass-stroke-bottom);
-            border-radius: var(--radius-lg);
-            padding: var(--space-4);
-            max-width: 760px;
-            width: 100%;
-            max-height: 82vh;
-            overflow-y: auto;
-            transform: scale(0.92);
-            transform-origin: center center;
-            opacity: 0;
-            transition: transform 0.7s var(--apple-spring), opacity 0.4s ease;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.45);
-            will-change: transform, opacity;
+        .profile-school {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 1px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            margin-bottom: 0.3rem;
         }
 
-        .popup-wrap.show .popup-box {
-            transform: scale(1);
-            opacity: 1;
+        .profile-bio {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
         }
 
-        .popup-box::-webkit-scrollbar {
-            width: 4px;
+        .menu-title {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin: 0.25rem 0 0.5rem 0.5rem;
+            flex-shrink: 0;
         }
 
-        .popup-box::-webkit-scrollbar-track {
-            background: transparent;
+        /* 分类分组 */
+        .category-group {
+            margin-bottom: 0.15rem;
+            flex-shrink: 0;
         }
 
-        .popup-box::-webkit-scrollbar-thumb {
-            background: rgba(148,200,248,0.2);
-            border-radius: var(--radius-full);
-        }
-
-        .popup-head {
+        /* 分类标题（可点击折叠） */
+        .category-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: var(--space-3);
-            padding-bottom: var(--space-2);
-            border-bottom: 1px solid rgba(255,255,255,0.12);
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.5s var(--apple-smooth) 0.3s;
-            will-change: transform, opacity;
-        }
-
-        .popup-wrap.show .popup-head {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .popup-head h3 {
-            color: var(--accent-sky);
-            font-size: 19px;
+            gap: 8px;
+            padding: 5px 10px 5px 8px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.76rem;
             font-weight: 600;
             letter-spacing: 0.2px;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            border-left: 2px solid transparent;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .category-header:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .category-header:active {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .category-header .cat-icon {
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .category-header .cat-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .category-header .cat-count {
+            font-size: 0.6rem;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0 7px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .category-header .fold-toggle {
+            font-size: 0.6rem;
+            opacity: 0.4;
+            transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+            flex-shrink: 0;
+            will-change: transform;
+        }
+        .category-header.active-cat {
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+        }
+        .category-header.collapsed .fold-toggle {
+            transform: rotate(-90deg);
+        }
+
+        /* 实验列表（可折叠） */
+        .report-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            padding-left: 12px;
+            padding-top: 2px;
+            margin-top: 1px;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease,
+                padding 0.25s ease;
+            max-height: 800px;
+            opacity: 1;
+            list-style: none;
+        }
+        .category-header.collapsed+.report-list {
+            max-height: 0;
+            padding-top: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .report-item {
+            padding: 4px 10px 4px 14px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-left: 2px solid transparent;
+            -webkit-tap-highlight-color: transparent;
+            will-change: transform;
+        }
+        .report-item .item-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            opacity: 0.25;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+        .report-item .item-label {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .report-item .item-badge {
+            font-size: 0.55rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0 5px;
+            border-radius: 10px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .report-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            transform: translateX(3px);
+        }
+        .report-item:hover .item-dot {
+            opacity: 0.7;
+            background: var(--accent-color);
+        }
+        .report-item:active {
+            transform: scale(0.97);
+            transition-duration: 0.06s;
+        }
+        .report-item.active {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-color);
+            font-weight: 500;
+            border-left-color: var(--accent-color);
+        }
+        .report-item.active .item-dot {
+            opacity: 1;
+            background: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* ========== 主内容区域 ========== */
+        main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 2rem 2.5rem 2.5rem;
+            max-width: 1000px;
+            min-height: 100vh;
+            background: var(--bg-color);
+            position: relative;
+            z-index: 5;
+            transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1),
+                opacity 0.3s ease;
+            will-change: transform, opacity;
+            overflow-y: auto;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
+            padding: 2rem 2.25rem;
+            box-shadow: 0 16px 28px -6px rgba(0, 0, 0, 0.35);
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            min-height: 380px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========== 主内容区 - Markdown 排版 ========== */
+        .markdown-body h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.4rem;
+            color: var(--accent-color);
+        }
+        .markdown-body h2,
+        .markdown-body h3 {
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #e2e8f0;
+        }
+        .markdown-body p {
+            margin-bottom: 0.8rem;
+            color: #cbd5e1;
+        }
+        .markdown-body code {
+            background: rgba(0, 0, 0, 0.35);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .markdown-body pre {
+            margin: 0.8rem 0;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+        }
+        .markdown-body blockquote {
+            border-left: 3px solid var(--accent-color);
+            padding-left: 1rem;
+            margin: 0.8rem 0;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 6px 14px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+
+        /* ========== 欢迎页 ========== */
+        .welcome-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 0.8rem;
+        }
+        .welcome-header .big-icon {
+            font-size: 2.6rem;
+            line-height: 1;
+        }
+        .welcome-header h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+
+        .welcome-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 2rem;
+            margin: 1.2rem 0 0.8rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+        .welcome-stats .stat-item {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .welcome-stats .stat-num {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+        .welcome-stats .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .welcome-desc {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin: 0.4rem 0 0;
+        }
+        .welcome-desc strong {
+            color: #e2e8f0;
+        }
+
+        /* ========== 详情卡片 ========== */
+        .detail-card {
+            animation: fadeDetail 0.4s ease forwards;
+        }
+        @keyframes fadeDetail {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-card .detail-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+        }
+        .detail-card .detail-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
-
-        .popup-head h3 .head-icon {
-            width: 36px;
-            height: 36px;
+        .detail-card .detail-sub .tag {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-color);
+            padding: 1px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(56, 189, 248, 0.12);
+        }
+        .detail-card .detail-body {
+            color: #cbd5e1;
+            line-height: 1.7;
+            margin: 0.4rem 0 1.2rem;
+        }
+        .detail-card .detail-body .label {
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
+        .detail-card .detail-body .link-url {
+            color: var(--accent-color);
+            word-break: break-all;
+            font-size: 0.82rem;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 3px 12px;
             border-radius: var(--radius-sm);
-            background: rgba(20, 30, 55, 0.92);
-            border: 1px solid var(--glass-stroke-top);
-            display: grid;
-            place-items: center;
-            font-size: 18px;
+            display: inline-block;
+            max-width: 100%;
         }
 
-        .popup-close {
-            width: 30px;
-            height: 30px;
-            border: 1px solid rgba(148,200,248,0.18);
-            border-radius: var(--radius-full);
-            display: grid;
-            place-items: center;
-            color: var(--accent-sky);
-            cursor: pointer;
-            transition: transform 0.22s var(--apple-spring), background 0.22s ease, color 0.22s ease;
-            font-size: 18px;
-            flex-shrink: 0;
-            background: rgba(148,200,248,0.06);
-            position: relative;
-            z-index: 10;
-            will-change: transform;
-        }
-
-        .popup-close:hover {
-            background: var(--accent-sky);
-            color: var(--bg-deep);
-            transform: rotate(90deg) scale(1.1);
-            border-color: var(--accent-sky);
-        }
-
-        .popup-loading {
-            display: flex;
+        .btn-github {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            padding: 60px 0;
-        }
-
-        .loading-spinner {
-            width: 36px;
-            height: 36px;
-            border: 2.5px solid rgba(148,200,248,0.15);
-            border-top-color: var(--accent-sky);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-            will-change: transform;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .popup-grid {
-            display: none;
-        }
-
-        .popup-grid.show {
-            display: grid;
-            animation: fadeInGrid 0.4s var(--apple-smooth) forwards;
-        }
-
-        @keyframes fadeInGrid {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ========== 弹窗条目优化：减少重绘，使用 transform ========== */
-        .popup-item {
-            padding: var(--space-2) var(--space-3);
-            background: rgba(20, 30, 55, 1);
-            border-top: 1px solid rgba(255,255,255,0.09);
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: transform 0.22s var(--apple-spring), background 0.22s ease, box-shadow 0.22s ease;
-            position: relative;
-            overflow: hidden;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            opacity: 0;
-            transform: translateY(16px) scale(0.96);
-            will-change: transform, opacity;
-            --mx: 50%;
-            --my: 50%;
-        }
-
-        .popup-wrap.show .popup-item {
-            animation: popupItemIn 0.4s var(--apple-spring) forwards;
-        }
-
-        @keyframes popupItemIn {
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .popup-item:nth-child(1) { animation-delay: 0.4s; }
-        .popup-item:nth-child(2) { animation-delay: 0.45s; }
-        .popup-item:nth-child(3) { animation-delay: 0.5s; }
-        .popup-item:nth-child(4) { animation-delay: 0.55s; }
-        .popup-item:nth-child(5) { animation-delay: 0.6s; }
-        .popup-item:nth-child(6) { animation-delay: 0.65s; }
-        .popup-item:nth-child(7) { animation-delay: 0.7s; }
-        .popup-item:nth-child(8) { animation-delay: 0.75s; }
-        .popup-item:nth-child(9) { animation-delay: 0.8s; }
-        .popup-item:nth-child(10) { animation-delay: 0.85s; }
-
-        .popup-item .item-num {
-            width: 26px;
-            height: 26px;
-            border-radius: var(--radius-sm);
-            background: rgba(148,200,248,0.1);
-            color: var(--accent-sky);
-            font-size: 11px;
+            gap: 7px;
+            padding: 9px 26px;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #fff;
+            font-size: 0.9rem;
             font-weight: 600;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-            transition: all 0.3s ease;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.25s ease;
+            box-shadow: 0 4px 18px rgba(56, 189, 248, 0.2);
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-github:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 28px rgba(56, 189, 248, 0.28);
+        }
+        .btn-github:active {
+            transform: scale(0.96);
+            transition-duration: 0.06s;
         }
 
-        .popup-item:hover .item-num {
-            background: var(--accent-sky);
-            color: var(--bg-deep);
-        }
-
-        .popup-item .item-text {
-            font-size: 14.5px;
+        /* ========== 移动端返回按钮 ========== */
+        .mobile-back {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 4px 8px 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
             font-weight: 500;
-            color: #e2e8f0;
-            transition: color 0.3s ease;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: color 0.2s ease;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--bg-color);
+            border-bottom: 1px solid transparent;
+            margin-bottom: 4px;
+        }
+        .mobile-back:active {
+            color: var(--accent-color);
+        }
+        .mobile-back .back-arrow {
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .mobile-back:active .back-arrow {
+            transform: translateX(-4px);
         }
 
-        .popup-item:hover .item-text {
-            color: #f1f5f9;
+        /* ========== 响应式：移动端（< 820px） ========== */
+        @media (max-width: 820px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+            sidebar {
+                width: var(--sidebar-width);
+                padding: 1.2rem 1rem 0.8rem;
+            }
+            main {
+                margin-left: var(--sidebar-width);
+                padding: 1.2rem 1.5rem 1.5rem;
+            }
+            .content-card {
+                padding: 1.5rem;
+                min-height: 300px;
+            }
+            .welcome-stats {
+                flex-direction: column;
+                gap: 0.4rem;
+                padding: 0.8rem 1.2rem;
+            }
         }
 
-        .popup-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(100px circle at var(--mx) var(--my), rgba(148,200,248,0.1), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            will-change: opacity;
-        }
+        /* ========== 移动端（< 640px）视图切换模式 + 大字体 ========== */
+        @media (max-width: 639px) {
+            body {
+                overflow: hidden;
+                /* 防止页面滚动 */;
+            }
 
-        .popup-item:hover::before {
-            opacity: 1;
-        }
-
-        .popup-item:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-top-color: rgba(255,255,255,0.13);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.14);
-        }
-
-        .popup-item:active {
-            transform: scale(0.98);
-            transition-duration: 0.07s;
-        }
-
-        /* 优化：冲击波使用 transform 而非 width/height */
-        .shockwave {
-            position: fixed;
-            border-radius: 50%;
-            border: 1.5px solid rgba(148,200,248,0.3);
-            background: radial-gradient(circle, rgba(148,200,248,0.06), transparent 70%);
-            pointer-events: none;
-            z-index: 9997;
-            /* 使用 transform: scale 替代 width/height 动画 */
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 0;
-            will-change: transform, opacity;
-        }
-
-        .shockwave.active {
-            animation: shockExpand 0.8s var(--apple-spring) forwards;
-        }
-
-        @keyframes shockExpand {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 0.7; }
-            100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                justify-content: center;
-                margin: var(--space-5) 0 var(--space-5);
-            }
-            .name-box {
-                text-align: center;
-            }
-            .main-name {
-                font-size: 46px;
-                justify-content: center;
-                letter-spacing: -0.5px;
-            }
-            .name-decoration {
-                margin: var(--space-2) auto 0;
-            }
-            .subTitle {
-                font-size: 12px;
-                letter-spacing: 3px;
-            }
-            .card {
-                padding: var(--space-3);
-                margin: var(--space-3) 0;
-            }
-            .card h2 {
-                font-size: 17px;
-            }
-            .card h2 .icon {
-                width: 30px;
-                height: 30px;
-                font-size: 15px;
-            }
-            .popup-grid {
-                grid-template-columns: 1fr;
-            }
-            .popup-box {
-                padding: var(--space-3);
-                max-height: 78vh;
-                max-width: 92%;
-            }
-            .funcBtn {
+            /* 侧边栏：全屏目录 */
+            sidebar {
                 width: 100%;
-                padding: 13px 0;
-                text-align: center;
+                height: 100vh;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 10;
+                border-right: none;
+                padding: 1.2rem 1.2rem 0.8rem;
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                background: rgba(15, 23, 42, 0.97);
+                transform: translateX(0);
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            /* 主内容：全屏覆盖层，默认在右侧隐藏 */
+            main {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                margin-left: 0;
+                padding: 0.8rem 1rem 1rem;
+                z-index: 20;
+                background: var(--bg-color);
+                transform: translateX(100%);
+                opacity: 1;
+                overflow-y: auto;
+                border-radius: 0;
+                transition: transform 0.38s cubic-bezier(0.34, 1.2, 0.64, 1),
+                    box-shadow 0.4s ease;
+                will-change: transform;
+                box-shadow: none;
+            }
+            /* 内容滑入状态 */
+            main.active {
+                transform: translateX(0);
+                box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5);
+            }
+
+            /* 内容卡片在移动端撑满 */
+            .content-card {
+                padding: 1.2rem 1.2rem 1.5rem;
+                min-height: auto;
+                border-radius: var(--radius-md);
+                background: var(--card-bg);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                margin-top: 0;
+                animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+
+            /* 移动端显示返回按钮 */
+            .mobile-back {
+                display: flex;
+                font-size: 1rem;
+                padding: 12px 4px 10px 0;
+                gap: 8px;
+            }
+            .mobile-back .back-arrow {
+                font-size: 1.4rem;
+            }
+
+            /* 移动端：让侧边栏内部可滚动 */
+            sidebar {
+                overflow-y: auto;
+                padding-bottom: 1.5rem;
+            }
+
+            /* 移动端调整个人简介尺寸（增大） */
+            .profile-card .avatar {
+                width: 64px;
+                height: 64px;
+                font-size: 1.8rem;
+            }
+            .profile-name {
+                font-size: 1.3rem;
+            }
+            .profile-school {
+                font-size: 0.9rem;
+                padding: 2px 16px;
+            }
+            .profile-bio {
+                font-size: 0.85rem;
+            }
+
+            .menu-title {
+                font-size: 0.8rem;
+                margin: 0.5rem 0 0.6rem 0.5rem;
+            }
+
+            /* 分类标题 */
+            .category-header {
+                font-size: 0.95rem;
+                padding: 8px 12px 8px 10px;
+                gap: 10px;
+            }
+            .category-header .cat-icon {
+                font-size: 1.05rem;
+            }
+            .category-header .cat-count {
+                font-size: 0.75rem;
+                padding: 0 10px;
+            }
+            .category-header .fold-toggle {
+                font-size: 0.8rem;
+            }
+
+            /* 实验项 */
+            .report-item {
+                font-size: 0.92rem;
+                padding: 8px 14px 8px 18px;
+                gap: 8px;
+            }
+            .report-item .item-dot {
+                width: 6px;
+                height: 6px;
+            }
+            .report-item .item-badge {
+                font-size: 0.7rem;
+                padding: 0 8px;
+            }
+
+            /* 主内容区欢迎页 */
+            .welcome-header h1 {
+                font-size: 1.6rem;
+            }
+            .welcome-header .big-icon {
+                font-size: 2.4rem;
+            }
+            .welcome-stats {
+                padding: 0.8rem 1.2rem;
+                gap: 0.5rem;
+            }
+            .welcome-stats .stat-num {
+                font-size: 1.4rem;
+            }
+            .welcome-stats .stat-label {
+                font-size: 0.9rem;
+            }
+            .welcome-desc {
+                font-size: 1rem;
+                line-height: 1.8;
+            }
+
+            /* 详情卡片 */
+            .detail-card .detail-title {
+                font-size: 1.4rem;
+            }
+            .detail-card .detail-sub {
+                font-size: 0.95rem;
+                gap: 12px;
+            }
+            .detail-card .detail-sub .tag {
+                font-size: 0.8rem;
+                padding: 2px 16px;
+            }
+            .detail-card .detail-body {
+                font-size: 1rem;
+                line-height: 1.8;
+            }
+            .detail-card .detail-body .label {
+                font-size: 0.9rem;
+            }
+            .detail-card .detail-body .link-url {
+                font-size: 0.9rem;
+                padding: 5px 14px;
+            }
+
+            /* 按钮 */
+            .btn-github {
+                font-size: 1rem;
+                padding: 12px 30px;
+                width: 100%;
+                justify-content: center;
+                gap: 10px;
             }
         }
 
-        @media (max-width: 480px) {
-            .main-name {
-                font-size: 38px;
+        /* ========== 极小屏（< 400px）再微调 ========== */
+        @media (max-width: 399px) {
+            sidebar {
+                padding: 0.8rem 0.8rem 0.4rem;
             }
-            .labTag {
-                padding: 8px 16px;
-                font-size: 13px;
+            .profile-card .avatar {
+                width: 54px;
+                height: 54px;
+                font-size: 1.5rem;
             }
-            .popup-item {
-                padding: var(--space-2);
+            .profile-name {
+                font-size: 1.1rem;
             }
+            .category-header {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }
+            .report-item {
+                font-size: 0.82rem;
+                padding: 6px 10px 6px 14px;
+            }
+            main {
+                padding: 0.5rem 0.6rem 0.8rem;
+            }
+            .content-card {
+                padding: 0.8rem 0.8rem 1rem;
+            }
+            .detail-card .detail-title {
+                font-size: 1.2rem;
+            }
+            .welcome-header h1 {
+                font-size: 1.3rem;
+            }
+            .welcome-header .big-icon {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* ========== 辅助类 ========== */
+        .text-muted {
+            color: var(--text-muted);
+        }
+        .mt-1 {
+            margin-top: 0.4rem;
+        }
+        .mt-2 {
+            margin-top: 0.8rem;
+        }
+
+        /* 平滑滚动 */
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+
+        /* 禁用点击高亮 */
+        .no-tap-highlight {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ========== 性能优化：减少合成层 ========== */
+        .gpu-accelerated {
+            transform: translateZ(0);
+            will-change: transform;
         }
     </style>
-    <base target="_blank">
-<base target="_blank">
 </head>
 <body>
-    <div class="texture-overlay"></div>
-    <div class="moon-glow"></div>
-    <div class="ocean-depth"></div>
-    <canvas id="starfield"></canvas>
-    <div class="container">
-        <header class="header">
-            <div class="name-box">
-                <h1 class="main-name" id="mainName">Draco</h1>
-                <div class="name-decoration"></div>
-                <p class="subTitle">深圳大学 · 实验报告收纳</p>
-            </div>
-        </header>
-        <div class="card" data-delay="0">
-            <h2><span class="icon">👤</span>个人简介</h2>
-            <p>我是 Draco，现就读于深圳大学，本页面用于收纳、分享各科实验报告，方便自己和同学查阅下载。</p>
-            <div class="card-meta">
-                <span class="dot"></span>
-                <span>持续更新中</span>
-                <span style="margin:0 4px">·</span>
-                <span>4 门课程</span>
-                <span style="margin:0 4px">·</span>
-                <span>27 份报告</span>
-            </div>
-        </div>
-        <div class="card" data-delay="150">
-            <h2><span class="icon">📂</span>实验报告分类仓库</h2>
-            <p>点击对应科目查看实验目录，所有报告均托管于 GitHub，可直接在线预览或下载。</p>
-            <div class="labList">
-                <div class="labTag" data-popup="physicsPopup"><span class="tag-num">1</span>大学物理实验</div>
-                <div class="labTag" data-popup="sysProPopup"><span class="tag-num">2</span>计算机系统概论实验</div>
-                <div class="labTag" data-popup="digitalPopup"><span class="tag-num">3</span>数字电路实验</div>
-                <div class="labTag" data-popup="computerPopup"><span class="tag-num">4</span>大学计算机实验</div>
-            </div>
-            <div class="empty-tip">点击科目名称可展开细分实验列表，点击实验项可跳转至报告页面</div>
-            <button class="funcBtn" onclick="openLabStorage()">进入完整报告仓库</button>
-        </div>
-        <footer>
-            Draco · 深圳大学 | 实验报告专用收纳主页 © 2026
-        </footer>
-    </div>
 
-    <!-- 物理弹窗 -->
-    <div class="popup-wrap" id="physicsPopup">
-        <div class="popup-box">
-            <div class="popup-head">
-                <h3><span class="head-icon">⚛</span>大学物理细分实验</h3>
-                <span class="popup-close" onclick="closePopup('physicsPopup')">×</span>
-            </div>
-            <div class="popup-loading">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="popup-grid">
-                <div class="popup-item" data-type="phys" data-id="p1"><span class="item-num">01</span><span class="item-text">薄透镜实验</span></div>
-                <div class="popup-item" data-type="phys" data-id="p2"><span class="item-num">02</span><span class="item-text">磁特性综合实验</span></div>
-                <div class="popup-item" data-type="phys" data-id="p3"><span class="item-num">03</span><span class="item-text">等厚干涉</span></div>
-                <div class="popup-item" data-type="phys" data-id="p4"><span class="item-num">04</span><span class="item-text">电子秤的设计</span></div>
-                <div class="popup-item" data-type="phys" data-id="p5"><span class="item-num">05</span><span class="item-text">多普勒效应测声速</span></div>
-                <div class="popup-item" data-type="phys" data-id="p6"><span class="item-num">06</span><span class="item-text">费米达拉克分布</span></div>
-                <div class="popup-item" data-type="phys" data-id="p7"><span class="item-num">07</span><span class="item-text">光敏电阻特性研究</span></div>
-                <div class="popup-item" data-type="phys" data-id="p8"><span class="item-num">08</span><span class="item-text">基于 multisim 的电源设计</span></div>
-                <div class="popup-item" data-type="phys" data-id="p9"><span class="item-num">09</span><span class="item-text">杨氏模量的测量</span></div>
-                <div class="popup-item" data-type="phys" data-id="p10"><span class="item-num">10</span><span class="item-text">准稳态法测比热导热系数</span></div>
-            </div>
+    <!-- ========== 侧边栏（目录） ========== -->
+    <sidebar id="sidebar">
+        <div class="profile-card">
+            <div class="avatar">👨‍💻</div>
+            <div class="profile-name">Draco</div>
+            <div class="profile-school">🎓 深圳大学</div>
+            <div class="profile-bio">个人实验报告与学习记录库</div>
         </div>
-    </div>
 
-    <!-- 计算机系统概论弹窗 -->
-    <div class="popup-wrap" id="sysProPopup">
-        <div class="popup-box">
-            <div class="popup-head">
-                <h3><span class="head-icon">🖥️</span>计算机系统概论细分实验</h3>
-                <span class="popup-close" onclick="closePopup('sysProPopup')">×</span>
-            </div>
-            <div class="popup-loading">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="popup-grid">
-                <div class="popup-item" data-type="sysp" data-id="sp1"><span class="item-num">01</span><span class="item-text">LC-3仿真器安装和使用</span></div>
-                <div class="popup-item" data-type="sysp" data-id="sp2"><span class="item-num">02</span><span class="item-text">LC-3机器码编程试验</span></div>
-                <div class="popup-item" data-type="sysp" data-id="sp3"><span class="item-num">03</span><span class="item-text">LC-3汇编语言实验1 求成绩等级</span></div>
-                <div class="popup-item" data-type="sysp" data-id="sp4"><span class="item-num">04</span><span class="item-text">LC-3简单游戏设计</span></div>
-                <div class="popup-item" data-type="sysp" data-id="sp5"><span class="item-num">05</span><span class="item-text">LC-3中断试验</span></div>
-            </div>
-        </div>
-    </div>
+        <div class="menu-title">📚 实验报告目录</div>
 
-    <!-- 数字电路弹窗 -->
-    <div class="popup-wrap" id="digitalPopup">
-        <div class="popup-box">
-            <div class="popup-head">
-                <h3><span class="head-icon">🔌</span>数字电路细分实验</h3>
-                <span class="popup-close" onclick="closePopup('digitalPopup')">×</span>
-            </div>
-            <div class="popup-loading">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="popup-grid">
-                <div class="popup-item" data-type="digital" data-id="d1"><span class="item-num">01</span><span class="item-text">门电路逻辑功能及测试</span></div>
-                <div class="popup-item" data-type="digital" data-id="d2"><span class="item-num">02</span><span class="item-text">译码器功能测试及应用</span></div>
-                <div class="popup-item" data-type="digital" data-id="d3"><span class="item-num">03</span><span class="item-text">数据选择器</span></div>
-                <div class="popup-item" data-type="digital" data-id="d4"><span class="item-num">04</span><span class="item-text">集成触发器功能测试及转换</span></div>
-                <div class="popup-item" data-type="digital" data-id="d5"><span class="item-num">05</span><span class="item-text">彩灯流水电路的设计</span></div>
-                <div class="popup-item" data-type="digital" data-id="d6"><span class="item-num">06</span><span class="item-text">555 定时器电路</span></div>
-            </div>
-        </div>
-    </div>
+        <!-- 分类列表由 JavaScript 动态生成 -->
+        <div id="categoryContainer"></div>
+    </sidebar>
 
-    <!-- 大学计算机弹窗 -->
-    <div class="popup-wrap" id="computerPopup">
-        <div class="popup-box">
-            <div class="popup-head">
-                <h3><span class="head-icon">💻</span>大学计算机细分实验</h3>
-                <span class="popup-close" onclick="closePopup('computerPopup')">×</span>
-            </div>
-            <div class="popup-loading">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="popup-grid">
-                <div class="popup-item" data-type="computer" data-id="c1"><span class="item-num">01</span><span class="item-text">实验1-文字信息处理+AI辅助工具使用</span></div>
-                <div class="popup-item" data-type="computer" data-id="c2"><span class="item-num">02</span><span class="item-text">实验2-电子表格处理+AI辅助工具使用</span></div>
-                <div class="popup-item" data-type="computer" data-id="c3"><span class="item-num">03</span><span class="item-text">实验3-演示文稿制作+AI辅助工具使用</span></div>
-                <div class="popup-item" data-type="computer" data-id="c4"><span class="item-num">04</span><span class="item-text">实验4-算法设计工具—Python编程能力</span></div>
-                <div class="popup-item" data-type="computer" data-id="c5"><span class="item-num">05</span><span class="item-text">实验5-算法设计工具—综合性任务的编程能力</span></div>
-                <div class="popup-item" data-type="computer" data-id="c6"><span class="item-num">06</span><span class="item-text">实验6-生成式人工智能工具辅助的创作型实验</span></div>
+    <!-- ========== 主内容 ========== -->
+    <main id="mainContent">
+        <!-- 移动端返回按钮 -->
+        <div class="mobile-back" id="mobileBack">
+            <span class="back-arrow">‹</span>
+            <span>返回目录</span>
+        </div>
+
+        <div class="content-card" id="contentCard">
+            <div id="content" class="markdown-body">
+                <!-- 默认由 JavaScript 渲染欢迎页 -->
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // ==============================================
-        // 📌 GitHub链接配置区 - 请在此处填写每个实验的完整链接
-        // ==============================================
-        const labLinks = {
-            phys: {
-                p1: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/薄透镜实验",
-                p2: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/磁特性综合实验",
-                p3: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/等厚干涉",
-                p4: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/电子秤的设计",
-                p5: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/多普勒效应测声速",
-                p6: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/费米达拉克分布",
-                p7: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/光敏电阻特性研究",
-                p8: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/基于 multisim 的电源设计",
-                p9: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/杨氏模量的测量",
-                p10: "https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/准稳态法测比热导热系数"
-            },
-            sysp: {
-                sp1: "https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验一 LC-3仿真器安装和使用",
-                sp2: "https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验二 LC-3机器码编程试验",
-                sp3: "https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验三 LC-3汇编语言实验1 求成绩等级",
-                sp4: "https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验四 LC-3简单游戏设计",
-                sp5: "https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验五 LC-3中断试验"
-            },
-            digital: {
-                d1: "https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验一",
-                d2: "https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验二",
-                d3: "https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验三",
-                d4: "https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验四",
-                d5: "https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验五",
-                d6: "https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验六"
-            },
-            computer: {
-                c1: "https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验1-文字信息处理+AI辅助工具使用",
-                c2: "https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验2-电子表格处理+AI辅助工具使用",
-                c3: "https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验3-演示文稿制作+AI辅助工具使用",
-                c4: "https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验4-算法设计工具—Python编程能力",
-                c5: "https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验5-算法设计工具—综合性任务的编程能力",
-                c6: "https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验6-生成式人工智能工具辅助的创作型实验/实验6-生成式人工智能工具辅助的创作型实验"
-            }
-        };
+        // ================================================================
+        //  📌 实验数据 —— 完全来自第二个文件，保留名称、分类、链接
+        // ================================================================
+        const LAB_DATA = [{
+            category: '大学物理实验',
+            icon: '⚛',
+            experiments: [
+                { id: 'p1', label: '薄透镜实验', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/薄透镜实验' },
+                { id: 'p2', label: '磁特性综合实验', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/磁特性综合实验' },
+                { id: 'p3', label: '等厚干涉', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/等厚干涉' },
+                { id: 'p4', label: '电子秤的设计', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/电子秤的设计' },
+                { id: 'p5', label: '多普勒效应测声速', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/多普勒效应测声速' },
+                { id: 'p6', label: '费米达拉克分布', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/费米达拉克分布' },
+                { id: 'p7', label: '光敏电阻特性研究', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/光敏电阻特性研究' },
+                { id: 'p8', label: '基于 multisim 的电源设计', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/基于 multisim 的电源设计' },
+                { id: 'p9', label: '杨氏模量的测量', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/杨氏模量的测量' },
+                { id: 'p10', label: '准稳态法测比热导热系数', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大物实验/准稳态法测比热导热系数' }
+            ]
+        }, {
+            category: '计算机系统概论实验',
+            icon: '🖥️',
+            experiments: [
+                { id: 'sp1', label: 'LC-3仿真器安装和使用', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验一 LC-3仿真器安装和使用' },
+                { id: 'sp2', label: 'LC-3机器码编程试验', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验二 LC-3机器码编程试验' },
+                { id: 'sp3', label: 'LC-3汇编语言实验1 求成绩等级', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验三 LC-3汇编语言实验1 求成绩等级' },
+                { id: 'sp4', label: 'LC-3简单游戏设计', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验四 LC-3简单游戏设计' },
+                { id: 'sp5', label: 'LC-3中断试验', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/计算机系统概论实验/实验五 LC-3中断试验' }
+            ]
+        }, {
+            category: '数字电路实验',
+            icon: '🔌',
+            experiments: [
+                { id: 'd1', label: '门电路逻辑功能及测试', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验一' },
+                { id: 'd2', label: '译码器功能测试及应用', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验二' },
+                { id: 'd3', label: '数据选择器', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验三' },
+                { id: 'd4', label: '集成触发器功能测试及转换', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验四' },
+                { id: 'd5', label: '彩灯流水电路的设计', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验五' },
+                { id: 'd6', label: '555 定时器电路', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/数字电路/实验六' }
+            ]
+        }, {
+            category: '大学计算机实验',
+            icon: '💻',
+            experiments: [
+                { id: 'c1', label: '实验1-文字信息处理+AI辅助工具使用', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验1-文字信息处理+AI辅助工具使用' },
+                { id: 'c2', label: '实验2-电子表格处理+AI辅助工具使用', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验2-电子表格处理+AI辅助工具使用' },
+                { id: 'c3', label: '实验3-演示文稿制作+AI辅助工具使用', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验3-演示文稿制作+AI辅助工具使用' },
+                { id: 'c4', label: '实验4-算法设计工具—Python编程能力', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验4-算法设计工具—Python编程能力' },
+                { id: 'c5', label: '实验5-算法设计工具—综合性任务的编程能力', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验5-算法设计工具—综合性任务的编程能力' },
+                { id: 'c6', label: '实验6-生成式人工智能工具辅助的创作型实验', link: 'https://github.com/blackchickenQ/myLabReport/tree/main/大学计算机/实验6-生成式人工智能工具辅助的创作型实验/实验6-生成式人工智能工具辅助的创作型实验' }
+            ]
+        }];
 
-        const FULL_REPO_URL = "https://github.com/你的用户名/你的仓库名";
+        // 统计
+        const totalExps = LAB_DATA.reduce((acc, cat) => acc + cat.experiments.length, 0);
+        const totalCats = LAB_DATA.length;
 
-        // ==============================================
-        // 性能优化后的交互逻辑
-        // ==============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            // 卡片入场动画
-            const cards = document.querySelectorAll('.card');
-            cards.forEach((card) => {
-                const delay = parseInt(card.dataset.delay) || 0;
-                setTimeout(() => {
-                    card.classList.add('active');
-                }, 300 + delay);
-            });
+        // ================================================================
+        //  工具：判断是否为移动端视图（< 640px）
+        // ================================================================
+        function isMobileView() {
+            return window.innerWidth < 640;
+        }
 
-            // 标题字符拆分动画
-            const mainName = document.getElementById('mainName');
-            const text = mainName.textContent;
-            mainName.innerHTML = '';
-            Array.from(text).forEach((char, i) => {
-                const span = document.createElement('span');
-                span.className = 'char';
-                span.style.animationDelay = `${i * 0.1}s`;
-                span.textContent = char;
-                mainName.appendChild(span);
-            });
+        // ================================================================
+        //  渲染侧边栏（支持折叠）
+        // ================================================================
+        const container = document.getElementById('categoryContainer');
 
-            // 分类标签：打开弹窗 + 鼠标跟随光晕（使用 requestAnimationFrame 节流）
-            const labTags = document.querySelectorAll('.labTag');
-            labTags.forEach(tag => {
-                tag.addEventListener('click', function(e) {
-                    const popupId = this.dataset.popup;
-                    if (popupId) {
-                        openPopup(popupId);
-                        createShockwave(e);
-                    }
-                });
+        function renderSidebar() {
+            container.innerHTML = '';
+            LAB_DATA.forEach((cat, catIdx) => {
+                const group = document.createElement('div');
+                group.className = 'category-group';
 
-                // 优化：鼠标移动使用 requestAnimationFrame 节流，避免每帧都更新 CSS 变量
-                let rafId = null;
-                tag.addEventListener('mousemove', (e) => {
-                    if (rafId) return;
-                    rafId = requestAnimationFrame(() => {
-                        const rect = tag.getBoundingClientRect();
-                        tag.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-                        tag.style.setProperty('--my', `${e.clientY - rect.top}px`);
-                        rafId = null;
+                // 默认折叠：添加 collapsed 类
+                const header = document.createElement('div');
+                header.className = 'category-header collapsed';
+                header.dataset.catIndex = catIdx; // 添加索引以便定位
+                header.innerHTML = `
+                    <span class="cat-icon">${cat.icon}</span>
+                    <span class="cat-name">${cat.category}</span>
+                    <span class="cat-count">${cat.experiments.length}</span>
+                    <span class="fold-toggle">▾</span>
+                `;
+                group.appendChild(header);
+
+                const list = document.createElement('ul');
+                list.className = 'report-list';
+                cat.experiments.forEach((exp, expIdx) => {
+                    const li = document.createElement('li');
+                    li.className = 'report-item';
+                    li.dataset.catIndex = catIdx;
+                    li.dataset.expIndex = expIdx;
+                    li.innerHTML = `
+                        <span class="item-dot"></span>
+                        <span class="item-label">${exp.label}</span>
+                        <span class="item-badge">${String(expIdx + 1).padStart(2, '0')}</span>
+                    `;
+                    li.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // 高亮实验项
+                        document.querySelectorAll('.report-item').forEach(el => el.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // 高亮所属分类标题 —— 通过 catIndex 定位
+                        const catIdx = parseInt(this.dataset.catIndex);
+                        document.querySelectorAll('.category-header').forEach(h => h.classList.remove('active-cat'));
+                        const targetHeader = document.querySelector(`.category-header[data-cat-index="${catIdx}"]`);
+                        if (targetHeader) {
+                            targetHeader.classList.add('active-cat');
+                            // 如果分类处于折叠状态，自动展开
+                            if (targetHeader.classList.contains('collapsed')) {
+                                targetHeader.classList.remove('collapsed');
+                            }
+                        }
+
+                        // 渲染详情
+                        const expIdx = parseInt(this.dataset.expIndex);
+                        renderDetail(catIdx, expIdx);
+                        // 移动端：滑入内容
+                        if (isMobileView()) {
+                            const mainEl = document.getElementById('mainContent');
+                            mainEl.classList.add('active');
+                            mainEl.scrollTop = 0;
+                        }
+                        // 保存折叠状态
+                        saveFoldState();
                     });
+                    list.appendChild(li);
+                });
+                group.appendChild(list);
+                container.appendChild(group);
+
+                // 折叠交互
+                header.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (e.target.closest('.report-item')) return;
+                    this.classList.toggle('collapsed');
+                    saveFoldState();
                 });
             });
+        }
 
-            // 点击弹窗遮罩关闭
-            const popupWraps = document.querySelectorAll('.popup-wrap');
-            popupWraps.forEach(wrap => {
-                wrap.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        closePopup(this.id);
-                    }
-                });
-            });
+        // ================================================================
+        //  渲染主内容区
+        // ================================================================
+        const contentEl = document.getElementById('content');
+        const mainEl = document.getElementById('mainContent');
+        const mobileBack = document.getElementById('mobileBack');
 
-            // 绑定实验条目点击跳转 + 鼠标光晕（同样节流）
-            bindPopupItems();
+        // 欢迎页
+        function renderWelcome() {
+            contentEl.innerHTML = `
+                <div class="welcome-header">
+                    <span class="big-icon">📘</span>
+                    <h1>实验报告库</h1>
+                </div>
+                <div class="welcome-stats">
+                    <div class="stat-item">
+                        <span class="stat-num">${totalCats}</span>
+                        <span class="stat-label">课程分类</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-num">${totalExps}</span>
+                        <span class="stat-label">实验报告</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-num">📂</span>
+                        <span class="stat-label">全部托管于 GitHub</span>
+                    </div>
+                </div>
+                <p class="welcome-desc">
+                    欢迎来到 <strong>Draco</strong> 的个人实验报告库 👋<br />
+                    左侧按课程分类列出了所有实验项目，点击即可查看详情并跳转至 GitHub 仓库。
+                </p>
+                <p class="welcome-desc mt-1" style="font-size:0.82rem; color:var(--text-muted);">
+                    💡 点击任意实验名称，右侧将显示该实验的详细信息，点击「查看报告」按钮直达 GitHub 目录。<br />
+                    🗂️ 点击分类标题可展开/收起该分类下的实验列表。
+                </p>
+            `;
+        }
 
-            // 初始化星空背景
-            initStarfield();
-        });
+        // 实验详情
+        function renderDetail(catIdx, expIdx) {
+            const cat = LAB_DATA[catIdx];
+            const exp = cat.experiments[expIdx];
+            if (!exp) return;
 
-        // 打开弹窗（带加载动画）
-        function openPopup(popupId) {
-            const popup = document.getElementById(popupId);
-            if (popup) {
-                document.body.style.overflow = 'hidden';
-                const loading = popup.querySelector('.popup-loading');
-                const grid = popup.querySelector('.popup-grid');
+            const num = String(expIdx + 1).padStart(2, '0');
 
-                loading.style.display = 'flex';
-                grid.classList.remove('show');
+            contentEl.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-title">${exp.label}</div>
+                    <div class="detail-sub">
+                        <span class="tag">${cat.icon} ${cat.category}</span>
+                        <span style="color:var(--text-muted);">实验 #${num}</span>
+                    </div>
+                    <div class="detail-body">
+                        <p><span class="label">📌 所属课程：</span>${cat.category}</p>
+                        <p><span class="label">🔗 GitHub 目录：</span></p>
+                        <p><span class="link-url">${exp.link}</span></p>
+                        <p style="margin-top:1rem; color:var(--text-muted); font-size:0.85rem;">
+                            ⚡ 点击下方按钮，在新标签页中打开该实验的 GitHub 仓库目录。
+                        </p>
+                    </div>
+                    <a href="${exp.link}" target="_blank" class="btn-github">
+                        <span>📄</span> 查看报告
+                    </a>
+                </div>
+            `;
 
-                popup.classList.add('show');
+            // 重新触发卡片动画
+            const card = document.getElementById('contentCard');
+            card.style.animation = 'none';
+            void card.offsetHeight;
+            card.style.animation = 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        }
 
-                clearTimeout(popup.loadTimer);
-                popup.loadTimer = setTimeout(() => {
-                    loading.style.display = 'none';
-                    grid.classList.add('show');
-                }, 600);
+        // ================================================================
+        //  移动端：返回目录
+        // ================================================================
+        function closeContent() {
+            if (isMobileView()) {
+                mainEl.classList.remove('active');
             }
         }
 
-        // 关闭弹窗
-        function closePopup(popupId) {
-            const popup = document.getElementById(popupId);
-            if (popup) {
-                clearTimeout(popup.loadTimer);
-                popup.classList.remove('show');
-                document.body.style.overflow = 'auto';
-            }
+        mobileBack.addEventListener('click', closeContent);
+
+        // ================================================================
+        //  折叠状态持久化（localStorage）
+        // ================================================================
+        function saveFoldState() {
+            const headers = document.querySelectorAll('.category-header');
+            const states = [];
+            headers.forEach(h => {
+                states.push(h.classList.contains('collapsed'));
+            });
+            try {
+                localStorage.setItem('draco_fold_states', JSON.stringify(states));
+            } catch (e) { /* ignore */ }
         }
 
-        // 实验条目交互：鼠标光晕 + 点击跳转
-        function bindPopupItems() {
-            const items = document.querySelectorAll('.popup-item');
-            items.forEach(item => {
-                // 优化：同样使用 requestAnimationFrame 节流鼠标移动
-                let rafId = null;
-                item.addEventListener('mousemove', (e) => {
-                    if (rafId) return;
-                    rafId = requestAnimationFrame(() => {
-                        const rect = item.getBoundingClientRect();
-                        item.style.setProperty('--mx', `${e.clientX - rect.left}px`);
-                        item.style.setProperty('--my', `${e.clientY - rect.top}px`);
-                        rafId = null;
-                    });
-                });
-
-                item.addEventListener('click', function() {
-                    const type = this.dataset.type;
-                    const id = this.dataset.id;
-                    const link = labLinks[type]?.[id];
-                    if (link) {
-                        window.open(link, '_blank');
+        function restoreFoldState() {
+            try {
+                const data = localStorage.getItem('draco_fold_states');
+                if (!data) return;
+                const states = JSON.parse(data);
+                const headers = document.querySelectorAll('.category-header');
+                headers.forEach((h, i) => {
+                    if (states[i] === true) {
+                        h.classList.add('collapsed');
                     } else {
-                        alert('该实验报告暂未上传，敬请期待');
+                        h.classList.remove('collapsed');
                     }
                 });
-            });
+            } catch (e) { /* ignore */ }
         }
 
-        // 点击冲击波效果
-        function createShockwave(event) {
-            if (!event) return;
-            const shockwave = document.createElement('div');
-            shockwave.className = 'shockwave';
-            shockwave.style.left = `${event.clientX}px`;
-            shockwave.style.top = `${event.clientY}px`;
-            document.body.appendChild(shockwave);
-
-            // 优化：使用 requestAnimationFrame 确保在下一帧添加 active 类，避免强制同步布局
-            requestAnimationFrame(() => {
-                shockwave.classList.add('active');
-            });
-
-            setTimeout(() => {
-                shockwave.remove();
-            }, 800);
-        }
-
-        // 打开完整仓库主页
-        function openLabStorage() {
-            window.open(FULL_REPO_URL, '_blank');
-        }
-
-        // ==============================================
-        // 星空背景动画 - 大幅优化版本
-        // ==============================================
-        function initStarfield() {
-            const canvas = document.getElementById('starfield');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let stars = [];
-            let animationId = null;
-            let lastTime = 0;
-            // 优化：限制帧率为 30fps，降低 CPU/GPU 负担
-            const FRAME_INTERVAL = 1000 / 30;
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                createStars();
-            }
-
-            function createStars() {
-                // 优化：减少星星数量，从面积/30000 改为 /45000
-                const count = Math.floor((canvas.width * canvas.height) / 45000);
-                stars = [];
-                for (let i = 0; i < count; i++) {
-                    stars.push({
-                        x: Math.random() * canvas.width,
-                        y: Math.random() * canvas.height,
-                        r: Math.random() * 1.0 + 0.25,
-                        opacity: Math.random() * 0.35 + 0.15,
-                        speed: Math.random() * 0.15 + 0.05
-                    });
+        // ================================================================
+        //  窗口大小变化时，重置移动端状态
+        // ================================================================
+        let resizeTimer = null;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (!isMobileView()) {
+                    mainEl.classList.remove('active');
                 }
-            }
-
-            function animate(currentTime) {
-                // 优化：帧率控制
-                if (currentTime - lastTime < FRAME_INTERVAL) {
-                    animationId = requestAnimationFrame(animate);
-                    return;
-                }
-                lastTime = currentTime;
-
-                // 优化：使用 clearRect 前先检查是否需要绘制
-                if (document.hidden) {
-                    animationId = requestAnimationFrame(animate);
-                    return;
-                }
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#94c8f8';
-
-                // 优化：批量绘制，减少状态切换
-                ctx.beginPath();
-                stars.forEach(star => {
-                    ctx.globalAlpha = star.opacity;
-                    ctx.moveTo(star.x + star.r, star.y);
-                    ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-
-                    star.y += star.speed;
-                    if (star.y > canvas.height) {
-                        star.y = 0;
-                        star.x = Math.random() * canvas.width;
-                    }
-                });
-                ctx.fill();
-
-                animationId = requestAnimationFrame(animate);
-            }
-
-            // 优化：resize 防抖，从 120ms 提升到 200ms
-            let resizeTimer = null;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(resize, 200);
-            });
-
-            resize();
-            animationId = requestAnimationFrame(animate);
-        }
-
-        // 页面切后台暂停动画
-        document.addEventListener('visibilitychange', function() {
-            document.body.style.animationPlayState = document.hidden ? 'paused' : 'running';
+            }, 150);
         });
+
+        // ================================================================
+        //  初始化
+        // ================================================================
+        renderSidebar();
+        renderWelcome();
+
+        // 恢复折叠状态（会覆盖默认的 collapsed）
+        restoreFoldState();
+
+        // 如果是在移动端，确保内容默认隐藏
+        if (isMobileView()) {
+            mainEl.classList.remove('active');
+        }
+
+        console.log('📚 Draco 实验报告库已加载，共 ' + totalExps + ' 份报告，默认全部折叠。');
     </script>
+
 </body>
 </html>
