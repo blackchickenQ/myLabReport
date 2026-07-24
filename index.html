@@ -941,7 +941,7 @@
                 // 默认折叠：添加 collapsed 类
                 const header = document.createElement('div');
                 header.className = 'category-header collapsed';
-                header.dataset.catIndex = catIdx; // 添加索引以便定位
+                header.dataset.catIndex = catIdx;
                 header.innerHTML = `
                     <span class="cat-icon">${cat.icon}</span>
                     <span class="cat-name">${cat.category}</span>
@@ -968,13 +968,12 @@
                         document.querySelectorAll('.report-item').forEach(el => el.classList.remove('active'));
                         this.classList.add('active');
 
-                        // 高亮所属分类标题 —— 通过 catIndex 定位
+                        // 高亮所属分类标题
                         const catIdx = parseInt(this.dataset.catIndex);
                         document.querySelectorAll('.category-header').forEach(h => h.classList.remove('active-cat'));
                         const targetHeader = document.querySelector(`.category-header[data-cat-index="${catIdx}"]`);
                         if (targetHeader) {
                             targetHeader.classList.add('active-cat');
-                            // 如果分类处于折叠状态，自动展开
                             if (targetHeader.classList.contains('collapsed')) {
                                 targetHeader.classList.remove('collapsed');
                             }
@@ -983,13 +982,15 @@
                         // 渲染详情
                         const expIdx = parseInt(this.dataset.expIndex);
                         renderDetail(catIdx, expIdx);
-                        // 移动端：滑入内容
+
+                        // 移动端：滑入内容并 push 历史状态
                         if (isMobileView()) {
                             const mainEl = document.getElementById('mainContent');
                             mainEl.classList.add('active');
                             mainEl.scrollTop = 0;
+                            // 添加历史记录，以支持返回键关闭详情
+                            history.pushState({ mobileDetail: true }, '', '');
                         }
-                        // 保存折叠状态
                         saveFoldState();
                     });
                     list.appendChild(li);
@@ -1083,15 +1084,29 @@
         }
 
         // ================================================================
-        //  移动端：返回目录
+        //  移动端：返回目录（手动 + 系统返回键）
         // ================================================================
         function closeContent() {
-            if (isMobileView()) {
+            if (isMobileView() && mainEl.classList.contains('active')) {
                 mainEl.classList.remove('active');
+                // 清除历史状态，避免重复触发
+                history.replaceState(null, '', '');
             }
         }
 
+        // 手动返回按钮
         mobileBack.addEventListener('click', closeContent);
+
+        // 系统返回键 / 浏览器后退
+        window.addEventListener('popstate', function(event) {
+            if (isMobileView() && mainEl.classList.contains('active')) {
+                // 如果当前是详情页，关闭它并阻止默认后退行为（实际上 popstate 已经触发了）
+                closeContent();
+                // 阻止继续后退（因为我们已经替换了状态）
+                // 注意：这里不调用 event.preventDefault()，因为 popstate 不可取消
+                // 而是通过 replaceState 清除了状态，所以再次后退不会重复触发
+            }
+        });
 
         // ================================================================
         //  折叠状态持久化（localStorage）
